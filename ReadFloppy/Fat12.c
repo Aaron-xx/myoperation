@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef unsigned int uint;
 typedef unsigned short ushort;
@@ -44,13 +45,40 @@ struct RootEntry
 
 #pragma pack(pop)	//回复之前的对齐方式
 
+char *strdup(const char *s)
+{
+    size_t len = strlen(s) + 1;
+    char *p = malloc(len);
+    if (p != NULL) {
+        memcpy(p, s, len);
+    }
+    return p;
+}
+
+void trimmed(char* str)
+{
+    int i = 0, j = 0;
+
+    // 删除空格
+    while (str[i] != '\0')
+    {
+        if (str[i] != ' ')
+        {
+            str[j++] = str[i];
+        }
+        i++;
+    }
+
+    str[j] = '\0';
+}
+
 //查找根目录中第i个文件的文件入口
-struct RootEntry findRootEntry(struct Fat12Header* rf, char* p, int i)
+struct RootEntry findRootEntry(struct Fat12Header* rf, char* pimg, int i)
 {
 	struct RootEntry ret = {{0}};
 	FILE *fp;
 	
-	if((fp = fopen(p,"rb")) && (i > 0) && (i < rf->BPB_RootEntCnt))
+	if((fp = fopen(pimg,"rb")) && (i > 0) && (i < rf->BPB_RootEntCnt))
 	{
 			//将光标设置到pos处
 			long pos = 19 * rf->BPB_BytsPerSec + i * sizeof(struct RootEntry);
@@ -64,6 +92,61 @@ struct RootEntry findRootEntry(struct Fat12Header* rf, char* p, int i)
 	fclose(fp);
 	
 	return ret;
+}
+
+//查找指定文件名的头信息
+struct RootEntry FindRootEntry(struct Fat12Header* rf, char* pimg, char* fn)
+{
+    struct RootEntry ret = {{0}};
+
+    for(int i=0; i<rf->BPB_RootEntCnt; i++)
+    {
+        struct RootEntry re = findRootEntry(rf, pimg, i);
+
+        if( re.DIR_Name[0] != '\0' )
+        {
+			//分析并处理需要寻找的的文件名
+			//char *pfn = (char*) malloc (strlen(fn));
+			char *p = strchr(fn, '.');
+			int d = p - fn;
+			
+			char *fileName = strdup(fn);
+			trimmed(fileName);
+			
+			char *findName = strdup(re.DIR_Name);
+			trimmed(findName);
+			
+			//d>=0则有后缀名，否则没有
+            if( d >= 0 )
+            {
+				
+				
+				//分割需要寻找的的文件名中的前后缀
+				char *prefix = strtok(fileName, ".");
+				char *suffix = strtok(NULL, ".");
+				
+				//判断当前根目录文件名前缀是否为寻找字串前缀
+                if(!(strncmp(findName, prefix, strlen(prefix)))  \
+					//判断当前根目录文件名后缀是否为寻找字串后缀
+					&& !(strcmp(suffix, findName + (strlen(findName) - strlen(suffix)))))
+                {
+                    ret = re;
+                    break;
+                }
+                
+                free(fileName);
+            }
+            else
+            {
+                if( !strcmp(fn,fileName) )
+                {
+                    ret = re;
+                    break;
+                }
+            }
+        }
+    }
+    return ret;
 }
 
 void printRootEntry(struct Fat12Header* rf, char* p)
@@ -164,4 +247,8 @@ int main()
 	
 	printRootEntry(Fat12,tfile);
 	
+	printf("======Loader=====\n");
+	struct RootEntry re;
+	re = FindRootEntry (Fat12,tfile,"LOADER.ASM");
+	printf("DIR_Name:%s\n",re.DIR_Name);
 }
