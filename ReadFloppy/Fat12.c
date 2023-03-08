@@ -78,7 +78,7 @@ struct RootEntry findRootEntry(struct Fat12Header* rf, char* pimg, int i)
 	struct RootEntry ret = {{0}};
 	FILE *fp;
 	
-	if((fp = fopen(pimg,"rb")) && (i > 0) && (i < rf->BPB_RootEntCnt))
+	if((fp = fopen(pimg,"r")) && (i >= 0) && (i < rf->BPB_RootEntCnt))
 	{
 			//将光标设置到pos处
 			long pos = 19 * rf->BPB_BytsPerSec + i * sizeof(struct RootEntry);
@@ -110,16 +110,25 @@ struct RootEntry FindRootEntry(struct Fat12Header* rf, char* pimg, char* fn)
 			char *p = strchr(fn, '.');
 			int d = p - fn;
 			
+			
 			char *fileName = strdup(fn);
+			if(fileName == NULL)
+			{
+				printf("Memory request failed\n");
+				return re;
+			}
 			trimmed(fileName);
-			
-			char *findName = strdup(re.DIR_Name);
-			trimmed(findName);
-			
+				
 			//d>=0则有后缀名，否则没有
             if( d >= 0 )
             {
-				
+				char *findName = strdup(re.DIR_Name);
+				if(findName == NULL)
+				{
+					printf("Memory request failed\n");
+					return re;
+				}
+				trimmed(findName);
 				
 				//分割需要寻找的的文件名中的前后缀
 				char *prefix = strtok(fileName, ".");
@@ -135,6 +144,7 @@ struct RootEntry FindRootEntry(struct Fat12Header* rf, char* pimg, char* fn)
                 }
                 
                 free(fileName);
+				free(findName);
             }
             else
             {
@@ -166,6 +176,7 @@ void printRootEntry(struct Fat12Header* rf, char* p)
 		//打印每个文件信息
 		if(re.DIR_Name[0] != 0)
 		{
+			printf("%d:\n",i);
 			printf("DIR_Name: %s\n",re.DIR_Name);
 			printf("DIR_Attr: %hhu\n",re.DIR_Attr);
 			printf("DIR_WrtDate: %hhu\n",re.DIR_WrtDate);
@@ -233,6 +244,99 @@ void printHeader(struct Fat12Header* rf, char* p)
 	fclose(fp);
 }
 
+ushort* ReadFat(struct Fat12Header* rf, char* pimg)
+{
+	FILE* fp;
+
+	int fatTabSize = rf->BPB_BytsPerSec * 9;
+	char* fat = (uchar*)malloc(fatTabSize);
+	ushort* ret = (ushort*)malloc((fatTabSize * 2 / 3) * sizeof(ushort));
+	memset(ret, 0xFF, (fatTabSize * 2 / 3) * sizeof(ushort));
+	
+	if(fp = fopen(pimg,"r"))
+	{
+			//将光标设置到Fat表入口处
+			long pos = 1 * rf->BPB_BytsPerSec;
+			fseek(fp, pos, SEEK_SET);
+			
+			//在指定位置读取一个Fat表项
+			fread(fat, 1, fatTabSize, fp);
+			
+			for(int i,j=0; i<fatTabSize; i+=3,j+=2)
+			{
+				//每个Fat表项占1.5个字节，所以每2个Fat表项j使用3个字节
+				ret[j] = (ushort) (((fat[i+1] & 0x0F) << 8) | fat[i]);
+				ret[j+1] = (ushort) ((fat[i+2] << 4) | ((fat[i+1] >> 4) & 0x0F));
+			}
+	}
+	
+	fclose(fp);
+	
+	free(fat);
+	
+	return ret;
+}
+
+char* ReadFileContent(struct Fat12Header* rf, char* pimg, char* fn)
+{
+	FILE* fp;
+	char* ret;
+	struct RootEntry re;
+	
+	//找到指定的文件fn目录项
+	re = FindRootEntry (rf,pimg,fn);
+	
+	if(re.DIR_Name[0] != '\0')
+	{
+		//寻找Fat表项
+		ushort* fat = ReadFat(rf,pimg);
+		
+		//count每读到一个字节自增1,标记已读取到的字节数
+		int count = 0;
+		if(fp = fopen(pimg,"r"))
+		{
+			ret = (char*) malloc(re.DIR_FileSize);
+			if(ret == NULL) 
+			{
+				fclose(fp);
+				return NULL;
+			}
+			char buf[512] = {0};
+			
+			for(int i = 0,j=re.DIR_FstClus;j < 0xFF7; i+=512, j=fat[j])
+			{
+				//将位置设置为fat表对应的的数据处
+				long pos = rf->BPB_BytsPerSec * (31 + j);
+				fseek(fp, pos, SEEK_SET);
+				
+				//读取文件内容
+				//一次读取一个扇区到缓存中
+				fread(buf, 1, sizeof(buf), fp);
+				
+				//将缓存中数据组成文件内容放入内存
+				for(uint k = 0;k < sizeof(buf);k++)
+				{
+					
+					if(count < re.DIR_FileSize)
+					{
+						ret[i+k] = buf[k];
+						count++;
+					}
+				}
+				memset(buf,0,sizeof(buf));
+			}
+		}
+		free(fat);
+	}
+    else
+    {
+        printf("File not found!\n");
+    }
+    
+	fclose(fp);
+	
+	return ret;
+}
 
 int main()
 {
@@ -247,8 +351,7 @@ int main()
 	
 	printRootEntry(Fat12,tfile);
 	
-	printf("======Loader=====\n");
-	struct RootEntry re;
-	re = FindRootEntry (Fat12,tfile,"LOADER.ASM");
-	printf("DIR_Name:%s\n",re.DIR_Name);
+	char* con = ReadFileContent(Fat12,tfile,"LOADER.ASM");
+	printf("======load Loader=====\n");
+	printf("%s\n",con);
 }
