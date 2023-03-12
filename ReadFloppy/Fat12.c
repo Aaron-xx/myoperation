@@ -24,10 +24,10 @@ struct Fat12Header
     ushort BPB_NumHeads;	// 磁头数
     uint BPB_HiddSec;		// 隐藏扇区数
     uint BPB_TotSec32;		// FAT32 使用的字段，表示总扇区数（32 位）
-    uchar BS_DrvNum;		// 保留字段
+    uchar BS_DrvNum;		// 驱动器编号
     uchar BS_Reserved1;		// 保留字段
     uchar BS_BootSig;		// 扩展引导标志，指示是否有扩展引导记录
-    uint BS_VolID;		// 卷序列号，用于标识卷
+    uint BS_VolID;			// 卷序列号，用于标识卷
     char BS_VolLab[11];		// 卷标，长度为 11 个字节，用于标识卷
     char BS_FileSysType[8];	// 文件系统类型，长度为 8 个字节，表示文件系统的类型
 };
@@ -109,7 +109,6 @@ struct RootEntry FindRootEntry(struct Fat12Header* rf, char* pimg, char* fn)
 			//char *pfn = (char*) malloc (strlen(fn));
 			char *p = strchr(fn, '.');
 			int d = p - fn;
-			
 			
 			char *fileName = strdup(fn);
 			if(fileName == NULL)
