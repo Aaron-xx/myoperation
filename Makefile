@@ -31,9 +31,9 @@ $(boot): $(bootsrc)
 	$(NASM) -g $(bootsrc) -o $(boot)
 
 $(loader): $(loadersrc) $(mnt) $(img)
-	#@$(NASM) $(loadersrc) -o $(loader)
+	@$(NASM) $(loadersrc) -o $(loader)
 	@sudo $(MOUNT) $(img) $(mnt)
-	@sudo $(CP) $(loadersrc) $(mnt)
+	@sudo $(CP) $(loader) $(mnt)
 	@sudo $(UMOUNT) $(mnt)
 $(mnt):
 	$(MKDIR) mnt
@@ -41,4 +41,4 @@ $(mnt):
 .PHONY: clean
 
 clean:
-	$(RM) -rf $(boot) $(img) $(mnt)
+	$(RM) -rf $(boot) $(loader) $(img) $(mnt)

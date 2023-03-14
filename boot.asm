@@ -4,7 +4,13 @@ jmp short start
 nop
 
 define:
-	BaseOfStack equ 0x7c00
+	BaseOfStack      equ 0x7c00
+	BaseOfLoader     equ 0x9000
+	RootEntryOffset  equ 19
+	RootEntryLength  equ 14
+	EntryItemLength  equ 32
+	FatEntryOffset   equ 1
+	FatEntryLength   equ 9
 
 header:
     BS_OEMName     db "Aaron.op"	; 8 字节，格式化该磁盘的工具名称
@@ -36,18 +42,31 @@ start:
 	mov ss, ax
 	mov sp, BaseOfStack
 	
-	mov ax, 34
-	mov cx, 1
+	mov ax, RootEntryOffset
+	mov cx, RootEntryLength
 	mov bx, Buf
 	
 	call ReadSector
-
+	
+	mov si, tarStr
+	mov cx, tarLen
+	mov dx, 0
+	
+	call findEntry
+	
+	cmp dx, 0
+	jz nofind
+	jmp last
+	
+nofind:
 	mov bp, Buf
-	mov cx, 20
+	mov cx, 75
 	
 	call print_String
-	
-	jmp $
+
+last:
+	hlt
+	jmp last
 
 ;no parameter
 resetSector:
@@ -115,6 +134,67 @@ read:
 	
 	ret
 
+; ds:si --> source
+; es:di --> destination
+; cx    --> length
+;
+; return:
+;        (cx == 0) ? equal : noequal
+memCmp:
+	push si
+	push di
+	
+compare:
+	cmp cx, 0
+	jz equal
+	mov al, [si]
+	cmp al, byte [di]
+	jz goon
+	jmp unequal
+
+goon:
+	inc si
+	inc di
+	dec cx
+	jz compare
+	
+equal:
+unequal:
+	pop di
+	pop si
+	
+	ret
+
+; es:bx --> root entry offset address
+; ds:si --> target string
+; cx    --> target string length
+;
+; return:
+;     (dx != 0) ? exist : noexist
+;        exist --> bx is the target entry
+findEntry:
+	push cx
+	
+	mov dx, [BPB_RootEntCnt]
+	mov bp, sp
+
+find:
+	cmp dx, 0
+	jz noexist
+	mov di, bx
+	mov cx, [bp]
+	call memCmp
+	cmp cx, 0
+	jz exist
+	add bx, 32
+	dec dx
+	jmp find
+
+exist:
+noexist:
+	pop cx
+	ret
+	
 ;es:bp ==> 字符串地址
 ;cx ==> 字符串长度
 print_String:
@@ -125,9 +205,11 @@ print_String:
 done:
 	ret
 
-msgStr	db	"Hello Aaron!"			;要打印的字符串
-msgLen	equ	($-msgStr)				;字符串长度
+msgStr	db	"NO LOADER..."		;要打印的字符串
+msgLen	equ	($-msgStr)			;字符串长度
 
+tarStr	db "LOADER      "		;loader文件名
+tarLen	equ ($-tarStr)
 Buf:
 	times 510-($-$$) db 0x00	;times :重复 (510-($-$$)) 次 "db 00"
 	;后面还有两个字节，所以上一行使用的是510

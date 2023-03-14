@@ -105,23 +105,23 @@ struct RootEntry FindRootEntry(struct Fat12Header* rf, char* pimg, char* fn)
 
         if( re.DIR_Name[0] != '\0' )
         {
-			//分析并处理需要寻找的的文件名
-			//char *pfn = (char*) malloc (strlen(fn));
-			char *p = strchr(fn, '.');
-			int d = p - fn;
-			
-			char *fileName = strdup(fn);
+			char *findName = strdup(re.DIR_Name);
+			char* fileName = strdup(fn);
 			if(fileName == NULL)
 			{
 				printf("Memory request failed\n");
 				return re;
 			}
 			trimmed(fileName);
+			trimmed(findName);
+			
+			//分析并处理需要寻找的的文件名
+			char *p = strchr(fileName, '.');
+			int d = p - fileName;
 				
 			//d>=0则有后缀名，否则没有
-            if( d >= 0 )
+            if( d >= 0 && strstr(fileName,"."))
             {
-				char *findName = strdup(re.DIR_Name);
 				if(findName == NULL)
 				{
 					printf("Memory request failed\n");
@@ -147,7 +147,7 @@ struct RootEntry FindRootEntry(struct Fat12Header* rf, char* pimg, char* fn)
             }
             else
             {
-                if( !strcmp(fn,fileName) )
+                if( !strcmp(findName,fileName) )
                 {
                     ret = re;
                     break;
@@ -327,11 +327,6 @@ char* ReadFileContent(struct Fat12Header* rf, char* pimg, char* fn)
 		}
 		free(fat);
 	}
-    else
-    {
-        printf("File not found!\n");
-    }
-    
 	fclose(fp);
 	
 	return ret;
@@ -350,7 +345,8 @@ int main()
 	
 	printRootEntry(Fat12,tfile);
 	
-	char* con = ReadFileContent(Fat12,tfile,"LOADER.ASM");
+	char* con = ReadFileContent(Fat12,tfile,"LOADER     ");
 	printf("======load Loader=====\n");
-	printf("%s\n",con);
+	//if(!con)
+		printf("%s\n",con);
 }
