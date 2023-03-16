@@ -5,12 +5,8 @@ nop
 
 define:
 	BaseOfStack      equ 0x7c00
-	BaseOfLoader     equ 0x9000
 	RootEntryOffset  equ 19
 	RootEntryLength  equ 14
-	EntryItemLength  equ 32
-	FatEntryOffset   equ 1
-	FatEntryLength   equ 9
 
 header:
     BS_OEMName     db "Aaron.op"	; 8 字节，格式化该磁盘的工具名称
@@ -55,12 +51,12 @@ start:
 	call findEntry
 	
 	cmp dx, 0
-	jz nofind
+	jz nofound
 	jmp last
 	
-nofind:
-	mov bp, Buf
-	mov cx, 75
+nofound:
+	mov bp, msgStr
+	mov cx, msgLen
 	
 	call print_String
 
@@ -89,7 +85,6 @@ resetSector:
 ;cx	==> number of sector
 ;es:bx	==> target address
 ReadSector:
-	pusha
 	
 	call resetSector
 	
@@ -130,8 +125,6 @@ read:
 	; 如果读取出错跳转到read重新读取
 	jc read
 	
-	popa
-	
 	ret
 
 ; ds:si --> source
@@ -145,18 +138,22 @@ memCmp:
 	push di
 	
 compare:
+	;若cx为0,则相等，因为目标字符串自定的，那么它的长度cx是已知的
 	cmp cx, 0
 	jz equal
+	;取出源地址存放的值
 	mov al, [si]
+	;将其与目标地址存放的值对比
 	cmp al, byte [di]
 	jz goon
 	jmp unequal
 
 goon:
+	;对比下一个字符
 	inc si
 	inc di
 	dec cx
-	jz compare
+	jmp compare
 	
 equal:
 unequal:
@@ -173,19 +170,26 @@ unequal:
 ;     (dx != 0) ? exist : noexist
 ;        exist --> bx is the target entry
 findEntry:
+	;将cx入栈，之后每次循环都要使用
 	push cx
 	
+	;dx存入根目录所有条目数
 	mov dx, [BPB_RootEntCnt]
 	mov bp, sp
 
 find:
+	;若dx等于0,则根目录遍历完毕
 	cmp dx, 0
 	jz noexist
+	;将当前根目录条目赋值给di
 	mov di, bx
+	;每次都把栈顶的值给cx,栈顶存放的是之前压入的cx的值
 	mov cx, [bp]
 	call memCmp
+	;cx为memCmp返回值
 	cmp cx, 0
 	jz exist
+	;每个条目占32字节，循环后每次 +32
 	add bx, 32
 	dec dx
 	jmp find
@@ -208,8 +212,9 @@ done:
 msgStr	db	"NO LOADER..."		;要打印的字符串
 msgLen	equ	($-msgStr)			;字符串长度
 
-tarStr	db "LOADER      "		;loader文件名
+tarStr	db "LOADER     "		;loader文件名
 tarLen	equ ($-tarStr)
+
 Buf:
 	times 510-($-$$) db 0x00	;times :重复 (510-($-$$)) 次 "db 00"
 	;后面还有两个字节，所以上一行使用的是510
