@@ -5,8 +5,12 @@ nop
 
 define:
 	BaseOfStack      equ 0x7c00
+	BaseOfLoader     equ 0x9000
 	RootEntryOffset  equ 19
 	RootEntryLength  equ 14
+	EntryItemLength  equ 32
+	FatEntryOffset   equ 1
+	FatEntryLength   equ 9
 
 header:
     BS_OEMName     db "Aaron.op"	; 8 字节，格式化该磁盘的工具名称
@@ -42,7 +46,7 @@ start:
 	mov cx, RootEntryLength
 	mov bx, Buf
 	
-	call ReadSector
+	call readSector
 	
 	mov si, tarStr
 	mov cx, tarLen
@@ -52,8 +56,30 @@ start:
 	
 	cmp dx, 0
 	jz nofound
-	jmp last
 	
+	mov si, bx
+	mov di, EntryItem
+	mov cx, EntryItemLength
+	
+	call memCpy
+	
+	mov ax, FatEntryLength
+	mov cx, [BPB_BytsPerSec]
+	mul cx
+	mov bx, BaseOfLoader
+	sub bx, cx
+	
+	mov ax, FatEntryOffset
+	mov cx, FatEntryLength
+	
+	call readSector
+	
+	mov cx, [EntryItem + 0x1A]
+	
+	call FatVec
+	
+	jmp last
+
 nofound:
 	mov bp, msgStr
 	mov cx, msgLen
@@ -63,6 +89,34 @@ nofound:
 last:
 	hlt
 	jmp last
+
+; cx --> index
+; bx --> fat table address
+;
+; return:
+;     dx --> fat[index]
+FatVec:
+	mov ax, cx
+	mov cl, 2
+	div cl
+	
+	push ax
+	
+	mov ah, 0
+	mov cl, 3
+	mul cl
+	mov cx, ax
+	
+	pop ax
+	
+	cmp ah, 0
+	jz even
+	jmp odd
+	
+even:	; FatVec[j] = ( (Fat[i+1] & 0x0F) << 8 ) | Fat[i];
+	
+odd:	; FatVec[j+1] = (Fat[i+2] << 4) | ( (Fat[i+1] >> 4) & 0x0F );
+
 
 ;no parameter
 resetSector:
@@ -84,7 +138,8 @@ resetSector:
 ;ax	==> logic sector num
 ;cx	==> number of sector
 ;es:bx	==> target address
-ReadSector:
+readSector:
+	push bx
 	
 	call resetSector
 	
@@ -125,6 +180,43 @@ read:
 	; 如果读取出错跳转到read重新读取
 	jc read
 	
+	pop bx
+	ret
+
+; ds:si --> source
+; es:di --> destination
+; cx    --> length
+memCpy:
+	cmp si, di
+	ja startToTail
+	
+	add si, cx
+	add di, cx
+	dec si
+	dec di
+	jmp tailToStart
+
+tailToStart:
+	cmp cx, 0
+	jz cpdone
+	mov al, [si]
+	mov byte [di], al
+	dec si
+	dec di
+	dec cx
+ 	jmp tailToStart
+
+startToTail:
+	cmp cx, 0
+	jz cpdone
+	mov al, [si]
+	mov byte [di], al
+	inc si
+	inc di
+	dec cx
+	jmp startToTail
+	
+cpdone:
 	ret
 
 ; ds:si --> source
@@ -149,7 +241,6 @@ compare:
 	jmp unequal
 
 goon:
-	;对比下一个字符
 	inc si
 	inc di
 	dec cx
@@ -206,14 +297,29 @@ print_String:
 	mov ax, 0x1301
 	mov bx, 0x0007
 	int 0x10
-done:
+
 	ret
+
+debugStr:
+	push cx
+	
+	mov bp, msgStr
+	mov cx, msgLen
+	
+	call print_String
+	
+	pop cx
+	
+	jmp $
+
 
 msgStr	db	"NO LOADER..."		;要打印的字符串
 msgLen	equ	($-msgStr)			;字符串长度
 
 tarStr	db "LOADER     "		;loader文件名
 tarLen	equ ($-tarStr)
+
+EntryItem times EntryItemLength db 0x00
 
 Buf:
 	times 510-($-$$) db 0x00	;times :重复 (510-($-$$)) 次 "db 00"
