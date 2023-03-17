@@ -74,11 +74,35 @@ start:
 	
 	call readSector
 	
-	mov cx, [EntryItem + 0x1A]
+	mov dx, [EntryItem + 0x1A]
+	mov si, BaseOfLoader
 	
+loadLoader:
+	;dx == fat index
+	;si == target
+	mov ax, dx
+	add ax, 31
+	mov cx, 1
+	push dx
+	push bx
+	mov bx, si
+	call readSector
+	pop bx
+	pop cx
 	call FatVec
+	cmp dx, 0xFF7
+	jnb test
+	add si, 512
+	jmp loadLoader
+
 	
-	jmp last
+test:
+	mov bp, debugMsg
+	mov cx, debugLen
+	
+	call print_String
+	
+	jmp BaseOfLoader
 
 nofound:
 	mov bp, msgStr
@@ -114,9 +138,46 @@ FatVec:
 	jmp odd
 	
 even:	; FatVec[j] = ( (Fat[i+1] & 0x0F) << 8 ) | Fat[i];
+	;’cx == i
+	mov dx, cx
+	;dx == i+1
+	add dx, 1
+	;Fat[i+1]
+	add dx, bx
+	mov bp, dx
+	mov dl, byte [bp]
+	;Fat[i+1] & 0x0F
+	and dl, 0x0F
+	;Fat[i+1] & 0x0F) << 8
+	shl dx, 8
+	;Fat[i]
+	add cx, bx
+	mov bp, cx
+	;FatVec[j] = ( (Fat[i+1] & 0x0F) << 8 ) | Fat[i]
+	or dl, byte [bp]
+	jmp return
+
 	
 odd:	; FatVec[j+1] = (Fat[i+2] << 4) | ( (Fat[i+1] >> 4) & 0x0F );
+	;cx == i
+	mov dx, cx
+	add dx, 2
+	add dx, bx
+	mov bp, dx
+	mov dl, byte [bp]
+	mov dh, 0
+	shl dx, 4
+	add cx, 1
+	add cx, bx
+	mov bp, cx
+	mov cl, byte [bp]
+	shr cl, 4
+	and cl, 0x0F
+	mov ch, 0
+	or dx, cx
 
+return:
+	ret
 
 ;no parameter
 resetSector:
@@ -300,24 +361,16 @@ print_String:
 
 	ret
 
-debugStr:
-	push cx
-	
-	mov bp, msgStr
-	mov cx, msgLen
-	
-	call print_String
-	
-	pop cx
-	
-	jmp $
-
 
 msgStr	db	"NO LOADER..."		;要打印的字符串
 msgLen	equ	($-msgStr)			;字符串长度
 
 tarStr	db "LOADER     "		;loader文件名
 tarLen	equ ($-tarStr)
+
+debugMsg	db "To loader"
+debugLen	equ	($-debugMsg)
+	
 
 EntryItem times EntryItemLength db 0x00
 
