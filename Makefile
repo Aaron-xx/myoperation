@@ -5,6 +5,8 @@ bootsrc=boot.asm
 loader=loader
 loadersrc=loader.asm
 
+inc=include.asm
+
 img=data.img
 
 mnt=mnt
@@ -19,18 +21,18 @@ CP=cp
 
 .PHONY: all
 
-all: $(mnt) $(boot) $(img) $(loader) 
+all: $(mnt) $(img) $(boot) $(loader) 
 	@echo "succeed!"
 
 $(img): 
 	@dd if=/dev/zero of=$@  bs=512 count=2880
 	@$(MKFS) -F 12 -n "Aaron" $@ > /dev/null
-	@dd if=$(boot) of=$@ bs=512 count=1 conv=notrunc
 
 $(boot): $(bootsrc)
 	$(NASM) -g $< -o $@
+	@dd if=$@ of=$(img) bs=512 count=1 conv=notrunc
 
-$(loader): $(bootsrc) $(loadersrc)
+$(loader): $(loadersrc) $(inc)
 	@$(NASM) $< -o $@
 	@sudo $(MOUNT) $(img) $(mnt)
 	@sudo $(CP) $(loader) $(mnt)
