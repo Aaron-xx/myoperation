@@ -2,7 +2,7 @@
 
 org 0x9000
 
-jmp CODE16_SEG
+jmp ENTRY_SEG
 
 [section .gdt]
 ; GDT definition
@@ -10,8 +10,10 @@ jmp CODE16_SEG
 GDT_ENTRY			:		Descriptor	0,				0,						0
 CODE32_DESC			:		Descriptor	0, 				Code32SegLen  - 1,		DA_C + DA_32
 DATA32_DESC			:		Descriptor	0, 				Data32SegLen  - 1,		DA_DR + DA_32
-STACK32_DESC		:		Descriptor	0, 				TopOfStackInit,			DA_DRW + DA_32
+STACK32_DESC		:		Descriptor	0, 				TopOfStack32,			DA_DRW + DA_32
 DISPLAY_DESC		:		Descriptor	0xB8000, 		0x07FFF,				DA_DRWA + DA_32
+CODE16_DESC			:		Descriptor	0, 				0xFFFF,					DA_C
+UPDATE_DESC			:		Descriptor	0, 				0xFFFF,					DA_DRW
 
 GdtLen	equ		$ - GDT_ENTRY
 
@@ -19,16 +21,19 @@ GdtPtr:
 	dw GdtLen
 	dd 0
 
-;GDT Selector
+;GDT Selector 选择子
 Code32Selector		equ (0x0001 << 3) + SA_TIG + SA_RPL0
 Data32Selector		equ (0x0002 << 3) + SA_TIG + SA_RPL0
 Stack32Selector		equ (0x0003 << 3) + SA_TIG + SA_RPL0
 Display32Selector	equ (0x0004 << 3) + SA_TIG + SA_RPL0
+Code16Selector		equ (0x0005 << 3) + SA_TIG + SA_RPL0
+UpdateSelector		equ (0x0006 << 3) + SA_TIG + SA_RPL0
 
 ;end of [section .gdt]
 
-TopOfStackInit    equ 0x7c00
+TopOfStack16    equ 0x7c00
 
+;全局数据段
 [section .dat]
 [bits 32]
 DATA32_SEG:
@@ -41,12 +46,15 @@ Data32SegLen equ $ - DATA32_SEG
 
 [section .s16]
 [bits 16]
-CODE16_SEG:
+ENTRY_SEG:
 	mov ax, cs
 	mov ds, ax
 	mov es, ax
 	mov ss, ax
-	mov sp, TopOfStackInit
+	mov sp, TopOfStack16
+	
+	; 将实模式代码段地址赋值给 从保护模式返回实模式 的跳转语句
+	mov [BACK_TO_REAL_MODE + 3], ax
 	
 	; initialize GDT for 32 bits code segment
 	
@@ -58,6 +66,18 @@ CODE16_SEG:
 	; initialize GDT for 32 bits data segment
 	mov esi, DATA32_SEG
 	mov edi, DATA32_DESC
+	
+	call initDescItem
+	
+	; initialize GDT for 32 bits stack segment
+	mov esi, STACK32_SEG
+	mov edi, STACK32_DESC
+	
+	call initDescItem
+	
+	; initialize GDT for 16 bits code segment
+	mov esi, CODE16_SEG
+	mov edi, CODE16_DESC
 	
 	call initDescItem
 	
@@ -86,7 +106,31 @@ CODE16_SEG:
 	
 	; 5.jump to 32 bits code 
 	jmp dword Code32Selector : 0
-
+	
+BACK_TO_REAL:
+	mov ax, cs
+	mov ds, ax
+	mov es, ax
+	mov ss, ax
+	mov sp, TopOfStack16
+	
+	; 关闭A20地址线
+	in al, 0x92
+	and al, 11111101b
+	out 0x92, al
+	
+	; 打开硬件中断
+	sti
+	
+	mov bp, HELLO_WORLD
+	mov cx, 12
+	mov dx, 0
+	mov ax, 0x1301
+	mov bx, 0x0007
+	int 0x10
+	
+	jmp $
+	
 ; esi --> code segment label
 ; edi --> descriptor label
 initDescItem:
@@ -96,24 +140,52 @@ initDescItem:
 	mov ax, cs
 	shl eax, 4
 	add eax, esi
+	; 向描述符填充低0-15位基址
 	mov [edi + 2], ax
 	shr eax, 16
+	; 填充16-23基址
 	mov byte [edi + 4], al
+	; 填充24-31基址
 	mov byte [edi + 7], ah
 	
 	pop eax
 	
 	ret
 
+[section .s16]
+[bits 16]
+CODE16_SEG:
+	mov ax, UpdateSelector
+	mov ds, ax
+	mov fs, ax
+	mov es, ax
+	mov gs, ax
+	mov ss, ax
+	
+	; exit protect mode 通知cpu退出保护模式
+	mov eax, cr0
+	and eax, 11111110b
+	mov cr0, eax
+	
+	; 返回实模式
+BACK_TO_REAL_MODE:
+	jmp 0 : BACK_TO_REAL
+	
+Code16SegLen equ $ - CODE16_SEG
+
 [section .s32]
 [bits 32]
 CODE32_SEG:
+	; 设置数据段选择子
 	mov ax, Data32Selector
 	mov ds, ax
-	
+	; 设置栈段选择子
 	mov ax, Stack32Selector
 	mov ss, ax
-	
+	; 设置栈顶
+	mov eax, TopOfStack32
+	mov esp, eax
+	; 设置显存选择子
 	mov ax, Display32Selector
 	mov gs, ax
 	
@@ -131,7 +203,7 @@ CODE32_SEG:
 	
 	call print_String
 	
-	jmp $
+	jmp Code16Selector : 0
 	
 ; ds:ebp    --> string address
 ; bx        --> attribute
@@ -147,11 +219,16 @@ print:
 	mov cl, [ds:ebp]
 	cmp cl, 0
 	je end_Print
+	; 每行80个字符，乘以dh(行)，得到所设置的行数的起始位置
 	mov eax, 80
 	mul dh
+	; 将列数加入al中，此时eax存放的就是要打印的位置
 	add al, dl
+	; 显卡文本显示，低位设置字符，高位设置显示属性
+	; 通过左移1位，得到乘以2后的结果
 	shl eax, 1
 	mov edi, eax
+	; 将ax低位设置字符，ax高位设置显示属性
 	mov ah, bl
 	mov al, cl
 	mov [gs:edi], ax
@@ -169,3 +246,12 @@ end_Print:
 	ret
 
 Code32SegLen	equ $ - CODE32_SEG
+
+; 设置32位的栈段
+[section .gs]
+[bits 32]
+STACK32_SEG:
+	times 1024 * 4 db 0
+	
+Stack32SegLen equ $ - STACK32_SEG
+TopOfStack32  equ Stack32SegLen - 1
