@@ -12,9 +12,15 @@ CODE32_DESC			:		Descriptor	0, 				Code32SegLen  - 1,		DA_C + DA_32
 DATA32_DESC			:		Descriptor	0, 				Data32SegLen  - 1,		DA_DR + DA_32
 STACK32_DESC		:		Descriptor	0, 				TopOfStack32,			DA_DRW + DA_32
 DISPLAY_DESC		:		Descriptor	0xB8000, 		0x07FFF,				DA_DRWA + DA_32
-CODE16_DESC			:		Descriptor	0, 				0xFFFF,					DA_C
-UPDATE_DESC			:		Descriptor	0, 				0xFFFF,					DA_DRW
-TASK_A_LDT_DESC		:		Descriptor	0, 				TaskALdtLen - 1,		DA_LDT
+CODE16_DESC			:		Descriptor	0,				0xFFFF,					DA_C
+UPDATE_DESC			:		Descriptor	0,				0xFFFF,					DA_DRW
+TASK_A_LDT_DESC		:		Descriptor	0,				TaskALdtLen - 1,		DA_LDT
+FUNCTION_DESC		:		Descriptor	0,				FuncSegLen - 1,			DA_C + DA_32
+
+; Gate Descriptor
+; Call Gate						选择子，				偏移，		 	参数个数，		属性
+PRINTSTRING_DESC	Gate		FunctionSecector,	Print,			0,				DA_386CGate
+
 
 GdtLen	equ		$ - GDT_ENTRY
 
@@ -30,6 +36,8 @@ DisplaySelector		equ (0x0004 << 3) + SA_TIG + SA_RPL0
 Code16Selector		equ (0x0005 << 3) + SA_TIG + SA_RPL0
 UpdateSelector		equ (0x0006 << 3) + SA_TIG + SA_RPL0
 TaskALdtSecector	equ (0x0007 << 3) + SA_TIG + SA_RPL0
+FunctionSecector	equ (0x0008 << 3) + SA_TIG + SA_RPL0
+PrintStrSecector	equ (0x0009 << 3) + SA_TIG + SA_RPL0
 ;end of [section .gdt]
 
 TopOfStack16    equ 0x7c00
@@ -81,23 +89,33 @@ ENTRY_SEG:
 	
 	call initDescItem
 	
+	; initialize ldt segment
 	mov esi, TASK_A_LDT_ENTRY
 	mov edi, TASK_A_LDT_DESC
 	
 	call initDescItem
 	
+	; initialize ldt 32 bits code segment
 	mov esi, TASK_A_CODE32_SEG
 	mov edi, TASK_A_CODE32_DESC
 	
 	call initDescItem
 	
+	; initialize ldt 32 bits data segment
 	mov esi, TASK_A_DATA32_SEG
 	mov edi, TASK_A_DATA32_DESC
 	
 	call initDescItem
 	
+	; initialize ldt 32 bits stack segment
 	mov esi, TASK_A_STACK32_SEG
 	mov edi, TASK_A_STACK32_DESC
+	
+	call initDescItem
+	
+	; initialize 32 bits func segment
+	mov esi, FUNCTION_SEG
+	mov edi, FUNCTION_DESC
 	
 	call initDescItem
 	
@@ -214,21 +232,26 @@ CODE32_SEG:
 	mov dh, 12
 	mov dl, 33
 	
-	call print_String
+	call FunctionSecector : Print
 	
 	mov ebp, HELLO_WORLD_OFFSET
 	mov bx, 0x0C
 	mov dh, 13
 	mov dl, 31
 	
-	call print_String
+	call FunctionSecector : Print
 	
 	mov ax, TaskALdtSecector
 	
 	lldt ax
 	
 	jmp TaskACode32Selector : 0
-	
+
+Code32SegLen	equ $ - CODE32_SEG
+
+[section .func]
+[bits 32]
+FUNCTION_SEG:
 ; ds:ebp    --> string address
 ; bx        --> attribute
 ; dx        --> dh : row, dl : col
@@ -267,9 +290,11 @@ end_Print:
 	pop eax
 	pop ebp
     
-	ret
-
-Code32SegLen	equ $ - CODE32_SEG
+	retf
+	
+Print equ print_String - $$
+	
+FuncSegLen equ $ - FUNCTION_SEG
 
 ; 设置32位的栈段
 [section .gs]
@@ -339,49 +364,9 @@ TASK_A_CODE32_SEG:
 	mov dh, 14
 	mov dl, 31
 	
-	call taskPrintString
+	call FunctionSecector : Print
 	
 	jmp Code16Selector : 0
-	
-; ds:ebp    --> string address
-; bx        --> attribute
-; dx        --> dh : row, dl : col
-taskPrintString:
-	push ebp
-	push eax
-	push edi
-	push cx
-	push dx
-	
-task_Print:
-	mov cl, [ds:ebp]
-	cmp cl, 0
-	je end_task_Print
-	; 每行80个字符，乘以dh(行)，得到所设置的行数的起始位置
-	mov eax, 80
-	mul dh
-	; 将列数加入al中，此时eax存放的就是要打印的位置
-	add al, dl
-	; 显卡文本显示，低位设置字符，高位设置显示属性
-	; 通过左移1位，得到乘以2后的结果
-	shl eax, 1
-	mov edi, eax
-	; 将ax低位设置字符，ax高位设置显示属性
-	mov ah, bl
-	mov al, cl
-	mov [gs:edi], ax
-	inc ebp
-	inc dl
-	jmp task_Print
-	
-end_task_Print:
-	pop dx
-	pop cx
-	pop edi
-	pop eax
-	pop ebp
-    
-	ret
 	
 TaskACode32SegLen	equ $ - TASK_A_CODE32_SEG
 
