@@ -8,19 +8,10 @@ jmp ENTRY_SEG
 ; GDT definition
 ;						 		段基址，					段界限，					段属性
 GDT_ENTRY			:		Descriptor	0,				0,						0
-CODE32_DESC			:		Descriptor	0, 				Code32SegLen  - 1,		DA_C + DA_32
-DATA32_DESC			:		Descriptor	0, 				Data32SegLen  - 1,		DA_DR + DA_32
-STACK32_DESC		:		Descriptor	0, 				TopOfStack32,			DA_DRW + DA_32
-DISPLAY_DESC		:		Descriptor	0xB8000, 		0x07FFF,				DA_DRWA + DA_32
-CODE16_DESC			:		Descriptor	0,				0xFFFF,					DA_C
-UPDATE_DESC			:		Descriptor	0,				0xFFFF,					DA_DRW
-TASK_A_LDT_DESC		:		Descriptor	0,				TaskALdtLen - 1,		DA_LDT
-FUNCTION_DESC		:		Descriptor	0,				FuncSegLen - 1,			DA_C + DA_32
-
-; Gate Descriptor
-; Call Gate						选择子，				偏移，		 	参数个数，		属性
-PRINTSTRING_DESC	Gate		FunctionSecector,	Print,			0,				DA_386CGate
-
+CODE32_DESC			:		Descriptor	0, 				Code32SegLen  - 1,		DA_C + DA_32 + DA_DPL3
+DATA32_DESC			:		Descriptor	0, 				Data32SegLen  - 1,		DA_DR + DA_32 + DA_DPL3
+STACK32_DESC		:		Descriptor	0, 				TopOfStack32,			DA_DRW + DA_32 + DA_DPL3
+DISPLAY_DESC		:		Descriptor	0xB8000, 		0x07FFF,				DA_DRWA + DA_32 + DA_DPL3
 
 GdtLen	equ		$ - GDT_ENTRY
 
@@ -29,15 +20,10 @@ GdtPtr:
 	dd 0
 
 ;GDT Selector 选择子
-Code32Selector		equ (0x0001 << 3) + SA_TIG + SA_RPL0
-Data32Selector		equ (0x0002 << 3) + SA_TIG + SA_RPL0
-Stack32Selector		equ (0x0003 << 3) + SA_TIG + SA_RPL0
-DisplaySelector		equ (0x0004 << 3) + SA_TIG + SA_RPL0
-Code16Selector		equ (0x0005 << 3) + SA_TIG + SA_RPL0
-UpdateSelector		equ (0x0006 << 3) + SA_TIG + SA_RPL0
-TaskALdtSecector	equ (0x0007 << 3) + SA_TIG + SA_RPL0
-FunctionSecector	equ (0x0008 << 3) + SA_TIG + SA_RPL0
-PrintStrSecector	equ (0x0009 << 3) + SA_TIG + SA_RPL0
+Code32Selector		equ (0x0001 << 3) + SA_TIG + SA_RPL3
+Data32Selector		equ (0x0002 << 3) + SA_TIG + SA_RPL3
+Stack32Selector		equ (0x0003 << 3) + SA_TIG + SA_RPL3
+DisplaySelector		equ (0x0004 << 3) + SA_TIG + SA_RPL3
 ;end of [section .gdt]
 
 TopOfStack16    equ 0x7c00
@@ -62,9 +48,6 @@ ENTRY_SEG:
 	mov ss, ax
 	mov sp, TopOfStack16
 	
-	; 将实模式代码段地址赋值给 从保护模式返回实模式 的跳转语句
-	mov [BACK_TO_REAL_MODE + 3], ax
-	
 	; initialize GDT for 32 bits code segment
 	mov esi, CODE32_SEG
 	mov edi, CODE32_DESC
@@ -80,42 +63,6 @@ ENTRY_SEG:
 	; initialize GDT for 32 bits stack segment
 	mov esi, STACK32_SEG
 	mov edi, STACK32_DESC
-	
-	call initDescItem
-	
-	; initialize GDT for 16 bits code segment
-	mov esi, CODE16_SEG
-	mov edi, CODE16_DESC
-	
-	call initDescItem
-	
-	; initialize ldt segment
-	mov esi, TASK_A_LDT_ENTRY
-	mov edi, TASK_A_LDT_DESC
-	
-	call initDescItem
-	
-	; initialize ldt 32 bits code segment
-	mov esi, TASK_A_CODE32_SEG
-	mov edi, TASK_A_CODE32_DESC
-	
-	call initDescItem
-	
-	; initialize ldt 32 bits data segment
-	mov esi, TASK_A_DATA32_SEG
-	mov edi, TASK_A_DATA32_DESC
-	
-	call initDescItem
-	
-	; initialize ldt 32 bits stack segment
-	mov esi, TASK_A_STACK32_SEG
-	mov edi, TASK_A_STACK32_DESC
-	
-	call initDescItem
-	
-	; initialize 32 bits func segment
-	mov esi, FUNCTION_SEG
-	mov edi, FUNCTION_DESC
 	
 	call initDescItem
 	
@@ -143,31 +90,13 @@ ENTRY_SEG:
 	mov cr0, eax
 	
 	; 5.jump to 32 bits code 
-	jmp dword Code32Selector : 0
-	
-BACK_TO_REAL:
-	mov ax, cs
-	mov ds, ax
-	mov es, ax
-	mov ss, ax
-	mov sp, TopOfStack16
-	
-	; 关闭A20地址线
-	in al, 0x92
-	and al, 11111101b
-	out 0x92, al
-	
-	; 打开硬件中断
-	sti
-	
-	mov bp, HELLO_WORLD
-	mov cx, 12
-	mov dx, 0
-	mov ax, 0x1301
-	mov bx, 0x0007
-	int 0x10
-	
-	jmp $
+	; jmp dword Code32Selector : 0
+	; 巧用远返回，进行不同权限级跳转
+	push Stack32Selector	; 目标栈段选择子
+	push TopOfStack32		; 栈顶指针
+	push Code32Selector		; 目标代码段选择子
+	push 0					; 目标代码段偏移量
+	retf
 	
 ; esi --> code segment label
 ; edi --> descriptor label
@@ -190,27 +119,6 @@ initDescItem:
 	
 	ret
 
-[section .s16]
-[bits 16]
-CODE16_SEG:
-	mov ax, UpdateSelector
-	mov ds, ax
-	mov fs, ax
-	mov es, ax
-	mov gs, ax
-	mov ss, ax
-	
-	; exit protect mode 通知cpu退出保护模式
-	mov eax, cr0
-	and eax, 11111110b
-	mov cr0, eax
-	
-	; 返回实模式
-BACK_TO_REAL_MODE:
-	jmp 0 : BACK_TO_REAL
-	
-Code16SegLen equ $ - CODE16_SEG
-
 [section .s32]
 [bits 32]
 CODE32_SEG:
@@ -232,29 +140,17 @@ CODE32_SEG:
 	mov dh, 12
 	mov dl, 33
 	
-	call FunctionSecector : Print
+	call print_String
 	
 	mov ebp, HELLO_WORLD_OFFSET
 	mov bx, 0x0C
 	mov dh, 13
 	mov dl, 31
 	
-	call FunctionSecector : Print
+	call print_String
 	
-	mov ax, TaskALdtSecector
-	
-	lldt ax
-	
-	jmp TaskACode32Selector : 0
+	jmp $
 
-Code32SegLen	equ $ - CODE32_SEG
-
-[section .func]
-[bits 32]
-FUNCTION_SEG:
-; ds:ebp    --> string address
-; bx        --> attribute
-; dx        --> dh : row, dl : col
 print_String:
 	push ebp
 	push eax
@@ -290,11 +186,10 @@ end_Print:
 	pop eax
 	pop ebp
     
-	retf
+	ret
 	
-Print equ print_String - $$
-	
-FuncSegLen equ $ - FUNCTION_SEG
+Code32SegLen	equ $ - CODE32_SEG
+
 
 ; 设置32位的栈段
 [section .gs]
@@ -304,73 +199,6 @@ STACK32_SEG:
 	
 Stack32SegLen equ $ - STACK32_SEG
 TopOfStack32  equ Stack32SegLen - 1
-
-;局部描述段:
-; ==========================================
-;
-;            Task A Code Segment 
-;
-; ==========================================
-
-[section .task-a-ldt]
-; Task A LDT definition 局部描述符
-;								段基址,						段界限,						段属性
-TASK_A_LDT_ENTRY:
-TASK_A_CODE32_DESC		:		Descriptor	0,			TaskACode32SegLen - 1,			DA_C + DA_32
-TASK_A_DATA32_DESC		:		Descriptor	0,			TaskAData32SegLen - 1,			DA_DR + DA_32
-TASK_A_STACK32_DESC		:		Descriptor	0,			TaskAStack32SegLen - 1,			DA_DRW + DA_32
-
-TaskALdtLen equ $ - TASK_A_LDT_ENTRY
-
-; Task A LDT Selector
-TaskACode32Selector  equ   (0x0000 << 3) + SA_TIL + SA_RPL0
-TaskAData32Selector  equ   (0x0001 << 3) + SA_TIL + SA_RPL0
-TaskAStack32Selector equ   (0x0002 << 3) + SA_TIL + SA_RPL0
-
-[section .task-a-dat]
-[bits 32]
-TASK_A_DATA32_SEG:
-	TASK_A_STRING			db  "This is Task A!", 0
-	TASK_A_STRING_OFFSET	equ TASK_A_STRING - $$
-
-TaskAData32SegLen  equ  $ - TASK_A_DATA32_SEG
-
-[section .task-a-gs]
-[bits 32]
-TASK_A_STACK32_SEG:
-	times 1024 db 0 
-	
-TaskAStack32SegLen	equ	$ - TASK_A_STACK32_SEG
-TaskATopOfStack32	equ	TaskAStack32SegLen - 1
-
-; 局部描述段的代码段
-[section .task-a-s32]
-[bits 32]
-TASK_A_CODE32_SEG:
-	mov ax, TaskAData32Selector
-	mov ds, ax
-	
-	mov ax, TaskAStack32Selector
-	mov ss, ax
-	
-	mov eax, TaskATopOfStack32
-	mov esp, eax
-	
-	mov ax, DisplaySelector
-	mov gs, ax
-	
-	mov ebp, TASK_A_STRING_OFFSET
-	mov bx, 0x0C
-	mov dh, 14
-	mov dl, 31
-	
-	call FunctionSecector : Print
-	
-	jmp Code16Selector : 0
-	
-TaskACode32SegLen	equ $ - TASK_A_CODE32_SEG
-
-
 
 
 
