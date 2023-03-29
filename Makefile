@@ -21,7 +21,7 @@ CP=cp
 
 .PHONY: all
 
-all: $(mnt) $(img) $(boot) $(loader) 
+all: $(mnt) $(img) $(boot) $(loader)
 	@echo "succeed!"
 
 $(img): 
