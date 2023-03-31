@@ -8,10 +8,12 @@ jmp ENTRY_SEG
 ; GDT definition
 ;						 		段基址，					段界限，					段属性
 GDT_ENTRY			:		Descriptor	0,				0,						0
-CODE32_DESC			:		Descriptor	0, 				Code32SegLen - 1,		DA_C + DA_32 + DA_DPL0
+CODE32_DESC			:		Descriptor	0, 				Code32SegLen - 1,		DA_C + DA_32 + DA_DPL1
 DATA32_DESC			:		Descriptor	0, 				Data32SegLen - 1,		DA_DR + DA_32 + DA_DPL2
-STACK32_DESC		:		Descriptor	0, 				TopOfStack32,			DA_DRW + DA_32 + DA_DPL0
+STACK32_DESC		:		Descriptor	0, 				TopOfStack32,			DA_DRW + DA_32 + DA_DPL1
 DISPLAY_DESC		:		Descriptor	0xB8000, 		0x07FFF,				DA_DRWA + DA_32 + DA_DPL3
+FUNCTION_DESC		:		Descriptor	0, 				FunctionSegLen -1,		DA_C + DA_32 + DA_DPL1
+TEST_DESC			:		Descriptor	0, 				TestSegLen -1,			DA_CCO + DA_32 + DA_DPL0
 
 ; GDT end
 
@@ -22,10 +24,12 @@ GdtPtr:
 	dd 0
 
 ;GDT Selector 选择子
-Code32Selector			equ (0x0001 << 3) + SA_TIG + SA_RPL0
+Code32Selector			equ (0x0001 << 3) + SA_TIG + SA_RPL1
 Data32Selector			equ (0x0002 << 3) + SA_TIG + SA_RPL2
-Stack32Selector			equ (0x0003 << 3) + SA_TIG + SA_RPL0
+Stack32Selector			equ (0x0003 << 3) + SA_TIG + SA_RPL1
 DisplaySelector			equ (0x0004 << 3) + SA_TIG + SA_RPL3
+FunctionSelector		equ (0x0005 << 3) + SA_TIG + SA_RPL1
+TestSelector			equ (0x0006 << 3) + SA_TIG + SA_RPL0
 ;end of [section .gdt]
 	
 TopOfStack16    equ 0x7c00
@@ -68,6 +72,16 @@ ENTRY_SEG:
 	
 	call initDescItem
 	
+	mov esi, FUNCTION_SEG
+	mov edi, FUNCTION_DESC
+	
+	call initDescItem
+	
+	mov esi, TEST_SEG
+	mov edi, TEST_DESC
+	
+	call initDescItem
+	
 	; initialize GDT pointer struct
 	mov eax, 0
 	mov ax, ds
@@ -92,7 +106,12 @@ ENTRY_SEG:
 	mov cr0, eax
 	
 	; 5.jump to 32 bits code 
-	jmp dword Code32Selector : 0
+	;jmp dword Code32Selector : 0
+	push Stack32Selector
+	push TopOfStack32
+	push Code32Selector
+	push 0
+	retf
 	
 ; esi --> code segment label
 ; edi --> descriptor label
@@ -136,17 +155,32 @@ CODE32_SEG:
 	mov dh, 12
 	mov dl, 33
 	
-	call printString
+	call FunctionSelector : 0
 	
+	jmp TestSelector : 0
+	
+Code32SegLen	equ $ - CODE32_SEG
+
+
+; 非一致性代码，此处代码特权级为0,可由低特权级跳转至此
+[section .func]
+[bits 32]
+TEST_SEG:
 	mov ebp, HELLO_WORLD_OFFSET
 	mov bx, 0x0C
 	mov dh, 13
 	mov dl, 31
 	
-	call printString
+	call FunctionSelector : 0
 	
 	jmp $
-	
+
+TestSegLen	equ $ - TEST_SEG
+
+[section .func]
+[bits 32]
+FUNCTION_SEG:
+
 ; ds:ebp    --> string address
 ; bx        --> attribute
 ; dx        --> dh : row, dl : col
@@ -185,9 +219,11 @@ endPrint:
 	pop eax
 	pop ebp
     
-	ret
-	
-Code32SegLen	equ $ - CODE32_SEG
+	retf
+
+Print equ printString - $$
+
+FunctionSegLen equ $ - FUNCTION_SEG
 
 ; 设置32位的栈段
 [section .gs]
