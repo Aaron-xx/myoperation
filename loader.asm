@@ -8,8 +8,8 @@ jmp ENTRY_SEG
 ; GDT definition
 ;						 		段基址，					段界限，					段属性
 GDT_ENTRY			:		Descriptor	0,				0,						0
-CODE32_DESC			:		Descriptor	0, 				Code32SegLen  - 1,		DA_C + DA_32 + DA_DPL0
-DATA32_DESC			:		Descriptor	0, 				Data32SegLen  - 1,		DA_DR + DA_32 + DA_DPL0
+CODE32_DESC			:		Descriptor	0, 				Code32SegLen - 1,		DA_C + DA_32 + DA_DPL0
+DATA32_DESC			:		Descriptor	0, 				Data32SegLen - 1,		DA_DR + DA_32 + DA_DPL2
 STACK32_DESC		:		Descriptor	0, 				TopOfStack32,			DA_DRW + DA_32 + DA_DPL0
 DISPLAY_DESC		:		Descriptor	0xB8000, 		0x07FFF,				DA_DRWA + DA_32 + DA_DPL3
 
@@ -23,7 +23,7 @@ GdtPtr:
 
 ;GDT Selector 选择子
 Code32Selector			equ (0x0001 << 3) + SA_TIG + SA_RPL0
-Data32Selector			equ (0x0002 << 3) + SA_TIG + SA_RPL0
+Data32Selector			equ (0x0002 << 3) + SA_TIG + SA_RPL2
 Stack32Selector			equ (0x0003 << 3) + SA_TIG + SA_RPL0
 DisplaySelector			equ (0x0004 << 3) + SA_TIG + SA_RPL3
 ;end of [section .gdt]
