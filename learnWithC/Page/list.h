@@ -1,62 +1,97 @@
-template<class T>
-class MyList
+#include <iostream>
+#include <vector>
+using namespace std;
+template <typename T>
+class MyList 
 {
 private:
-    T* m_data;              // 数组指针
-    int m_size;             // 元素个数
-    int m_capacity;         // 数组容量
-
+    vector<T> m_data;
 public:
-    // 构造函数
-    MyList() 
-        : m_data(nullptr), m_size(0), m_capacity(0) 
-    {}
+    MyList() {}
 
-    // 添加元素
-    void append(const T& value)
+    void append(const T& value) 
     {
-        if (m_size >= m_capacity)
+        m_data.push_back(value);
+    }
+
+    void insert(int index, const T& value) 
+    {
+        if (index >= 0 && index <= size()) 
         {
-            // 扩容
-            reserve(m_capacity == 0 ? 1 : m_capacity * 2);
+            m_data.insert(m_data.begin() + index, value);
+        } 
+        else 
+        {
+            cout << "Error: index out of range." << endl;
         }
-        m_data[m_size++] = value;
     }
 
-    // 获取元素个数
-    int size() const 
+    void removeAt(int index) {
+        if (index >= 0 && index < size()) 
+        {
+            m_data.erase(m_data.begin() + index);
+        } 
+        else 
+        {
+            cout << "Error: index out of range." << endl;
+        }
+    }
+
+    void removeAll(const T& value) {
+        for (auto iter = m_data.begin(); iter != m_data.end(); ) 
+        {
+            if (*iter == value) 
+            {
+                iter = m_data.erase(iter);
+            } 
+            else 
+            {
+                ++iter;
+            }
+        }
+    }
+
+    void clear() {
+        m_data.clear();
+    }
+
+    int indexOf(const T& value) const {
+        int index = -1;
+        for (int i = 0; i < size(); ++i) 
+        {
+            if (m_data[i] == value) 
+            {
+                index = i;
+                break;
+            }
+        }
+        return index;
+    }
+
+    bool contains(const T& value) const 
     {
-        return m_size;
+        return indexOf(value) != -1;
     }
 
-    // 获取元素
-    T& operator[](int index)
+    T& operator[](int index) 
     {
         return m_data[index];
     }
 
-private:
-    // 扩容
-    void reserve(int newCapacity)
+    const T& operator[](int index) const 
     {
-        // 分配新的内存
-        T* newData = new T[newCapacity];
-        // 复制原始数据
-        for (int i = 0; i < m_size; ++i)
-        {
-            newData[i] = m_data[i];
-        }
-        // 释放原有内存
-        delete[] m_data;
-        // 更新容量和指针
-        m_data = newData;
-        m_capacity = newCapacity;
+        return m_data[index];
     }
-public:
-    // 释放内存
-    ~MyList()
+
+    int size() const 
     {
-        delete[] m_data;
+        return m_data.size();
     }
+
+    bool isEmpty() const 
+    {
+        return m_data.empty();
+    }
+    ~MyList() {}
 };
 

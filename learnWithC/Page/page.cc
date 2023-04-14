@@ -1,34 +1,38 @@
 #include <iostream>
-#include <sstream>
 #include "list.h"
+#include "queue.h"
 
 using namespace std;
 
-#define PAGE_NUM  (0xFF + 1)
+#define PAGE_DIR_NUM  (0xF + 1)	// 一级页表
+#define PAGE_SUB_NUM  (0xF + 1)	// 子页表
+#define PAGE_NUM  (PAGE_DIR_NUM * PAGE_SUB_NUM)
 #define FRAME_NUM (0x04)
 #define FP_NONE   (-1)
 
 struct FrameItem
 {
-	int pid;			// the task which use the frame
-	int pnum;			// the page which the frame hold
+	int pid;			// 使用该页框的任务pid
+	int pnum;			// 页框内的页面号
+	int ticks;			// 该页框的使用频率
 
 	FrameItem()
 	{
 		pid = FP_NONE;
 		pnum = FP_NONE;
+		ticks = 0xFF;
 	}
 };
 
 class PageTable
 {
-	int m_pt[PAGE_NUM];
-	public:
+	int* m_pt[PAGE_DIR_NUM];
+public:
 	PageTable()
 	{
-		for(int i=0; i<PAGE_NUM; i++)
+		for(int i=0; i<PAGE_DIR_NUM; i++)
 		{
-			m_pt[i] = FP_NONE;
+			m_pt[i] = NULL;
 		}
 	}
 
@@ -36,17 +40,39 @@ class PageTable
 	{
 		if( (0 <= i) && (i < length()) )
 		{
-			return m_pt[i];
+			int dir = ((i & 0xF0) >> 4);
+			int sub = (i & 0x0F);
+
+			// 为减少空页对内存的的浪费，只有当访问到某页时，才会申请内存
+			if(m_pt[dir] == NULL)
+			{
+				m_pt[dir] = new int[PAGE_SUB_NUM];
+
+				for (int j = 0; j < PAGE_SUB_NUM; j++)
+				{
+					m_pt[dir][j] = FP_NONE;
+				}
+			}
+			return m_pt[dir][sub];
 		}
 		else
 		{
 			exit(-1);
+			return m_pt[0][0];	// 返回值不能为空
 		}
 	}
 
 	int length()
 	{
 		return PAGE_NUM;
+	}
+
+	~PageTable()
+	{
+		for(int i=0; i<PAGE_DIR_NUM; i++)
+		{
+			delete m_pt[i];
+		}
 	}
 };
 
@@ -104,10 +130,8 @@ class PCB
 
 	void printPageSerial()
 	{
-		stringstream temp;
-		string out = "";
-
 		string s = "";
+
 		for (int i = 0; i < m_pageSerialCount; i++)
 		{
 			s += m_pageSerial[i] + '0';
@@ -123,15 +147,45 @@ class PCB
 
 FrameItem FrameTable[FRAME_NUM];
 MyList<PCB*> TaskTable;
+MyQueue<int> TaskQueue;
 
 int Random();
 int GetFrameItem();
 void AccessPage(PCB& pcb);
 int RequestPage(int pid, int page);
 int SwapPage();
+int Random();
+int FIFO();
+int LRU();
+void ClearFrameItem(PCB& pcb);
+void ClearFrameItem(int frame);
 void PrintLog(string log);
 void PrintPageMap(int pid, int page, int frame);
 void PrintFatalError(string s, int pid, int page);
+
+void ClearFrameItem(PCB& pcb)
+{
+	for (int i = 0; i < FRAME_NUM; i++)
+	{
+		if(FrameTable[i].pid == pcb.getPid())
+		{
+			FrameTable[i].pid = FP_NONE;
+			FrameTable[i].pnum = FP_NONE;
+		}
+	}
+}
+
+void ClearFrameItem(int frame)
+{
+	for (int i = 0; i < FRAME_NUM; i++)
+	{
+		if(FrameTable[i].pid == frame)
+		{
+			FrameTable[i].pid = FP_NONE;
+			FrameTable[i].pnum = FP_NONE;
+		}
+	}
+}
 
 // 获取物理页框frame
 int GetFrameItem()
@@ -175,9 +229,53 @@ int Random()
 	return obj;
 }
 
+// 先进队列者先出
+int FIFO()
+{
+	// 列表头出队列
+	int obj = TaskQueue.dequeue();
+
+	PrintLog("Select a frame to swap page content out: Frame" + to_string(obj));
+    PrintLog("Write the selected page content back to disk.");
+
+	ClearFrameItem(obj);
+
+	return obj;
+}
+
+// 使用次数最少的页被换下
+int LRU()
+{
+	int obj = 0;
+	int ticks = FrameTable[obj].ticks;
+	string s = "";
+
+	// 取出ticks最小的frame
+	for (int i = 0; i < FRAME_NUM; i++)
+	{
+		s += "Frame" + to_string(i) + " : " + to_string(FrameTable[i].ticks) + "    ";
+		
+		if(ticks > FrameTable[i].ticks)
+		{
+			ticks = FrameTable[i].ticks;
+			obj = i;
+		}
+	}
+	PrintLog(s);
+	PrintLog("Select the LRU frame page to swap content out: Frame" + to_string(obj));
+	PrintLog("Write the selected page content back to disk.");
+
+	ClearFrameItem(obj);
+
+	return obj;
+}
+
+
 int SwapPage()
 {
-	return Random();
+	//return Random();
+	//return FIFO();
+	return LRU();
 }
 
 //页请求
@@ -209,6 +307,10 @@ int RequestPage(int pid, int page)
 	// 页交换成功后将pid和页号填充到换下的页框中
 	FrameTable[frame].pid = pid;
 	FrameTable[frame].pnum = page;
+	FrameTable[frame].ticks = 0xFF;
+
+	// 将请求到的页加入队列
+	TaskQueue.enqueue(frame);
 
 	return frame;
 }
@@ -242,8 +344,10 @@ void AccessPage(PCB& pcb)
 			else
 			{
 				PrintFatalError("Can NOT request page from disk...", pid, page);
+				exit(-1);
 			}
 		}
+		FrameTable[pageTable[page]].ticks++;
 	}
 	else
 	{
@@ -273,22 +377,47 @@ int main()
 
 	TaskTable.append(new PCB(1));
 	TaskTable.append(new PCB(2));
-	TaskTable.append(new PCB(3));
+	//TaskTable.append(new PCB(3));
 
 	for(int i=0; i<TaskTable.size(); i++)
 	{
 		TaskTable[i]->printPageSerial();
 	}
-
+	
 	while (true)
 	{
-		if(TaskTable[index]->running())
+		for (int i = 0; i < FRAME_NUM; i++)
 		{
-			AccessPage(*TaskTable[index]);
+			FrameTable[i].ticks--;
 		}
-		index = (index + 1) % TaskTable.size();
+		
+		if (TaskTable.size() > 0)
+		{
+			if(TaskTable[index]->running())
+			{
+				AccessPage(*TaskTable[index]);
+			}
+			else
+			{
+				PrintLog("Task" + to_string(TaskTable[index]->getPid()) + " is finished!");
+				PCB* pcb = TaskTable[index];
+				TaskTable.removeAt(index);
+				ClearFrameItem(*pcb);
 
-		cin.get();
+				delete pcb;
+			}
+		}
+
+		if(TaskTable.size() > 0)
+		{
+			index = (index + 1) % TaskTable.size();
+		}
+		else
+		{
+			break;
+		}
+
+		//cin.get();
 	}
 	return 0;
 }
