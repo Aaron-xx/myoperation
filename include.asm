@@ -8,6 +8,8 @@ DA_CR    equ    0x9A		; 可执行可读代码段
 DA_CCO   equ    0x9C		; 只执行一致代码段
 DA_CCOR  equ    0x9E		; 可执行可读一致代码段
 
+DA_LIMIT_4K    EQU       0x8000 ; 以4K(一页)为单位
+
 ; Special Attribute
 DA_LDT   equ    0x82		; 局部描述符段
 
@@ -34,6 +36,12 @@ SA_RPL3    equ    3
 
 SA_TIG    equ    0			; GDT 选择子
 SA_TIL    equ    4			; LDT 选择子
+
+PG_P      equ    1    ; 页存在属性位
+PG_RWR    equ    0    ; R/W 属性位值, 读/执行
+PG_RWW    equ    2    ; R/W 属性位值, 读/写/执行
+PG_USS    equ    0    ; U/S 属性位值, 系统级
+PG_USU    equ    4    ; U/S 属性位值, 用户级
 
 ; 描述符
 ; usage: Descriptor Base, Limit, Attr

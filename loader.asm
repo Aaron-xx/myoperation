@@ -1,25 +1,22 @@
 %include "include.asm"
 
+PageDirBase    equ    0x200000
+PageTblBase    equ    0x201000
+
 org 0x9000
 
 jmp ENTRY_SEG
 
 [section .gdt]
 ; GDT definition
-;						 		段基址，					段界限，					段属性
+;						 	段基址，					段界限，				段属性
 GDT_ENTRY			:		Descriptor	0,				0,						0
-CODE32_DESC			:		Descriptor	0, 				Code32SegLen  - 1,		DA_C + DA_32 + DA_DPL3
-DATA32_KERNEL_DESC	:		Descriptor	0, 				Data32KernelSegLen  - 1,DA_DRW + DA_32 + DA_DPL0
-STACK32_KERNEL_DESC	:		Descriptor	0, 				TopOfKernelStack32,		DA_DRW + DA_32 + DA_DPL0
-DATA32_USER_DESC	:		Descriptor	0, 				Data32UserSegLen  - 1,	DA_DRW + DA_32 + DA_DPL3
-STACK32_USER_DESC	:		Descriptor	0, 				TopOfUserStack32,		DA_DRW + DA_32 + DA_DPL3
-DISPLAY_DESC		:		Descriptor	0xB8000, 		0x07FFF,				DA_DRWA + DA_32 + DA_DPL3
-FUNCTION_DESC		:		Descriptor	0, 				FunctionSegLen - 1,		DA_C + DA_32 + DA_DPL0
-TSS_DESC			:		Descriptor	0, 				TSSLen - 1,				DA_386TSS + DA_32 + DA_DPL0
-
-; Call Gate
-;										选择子,				偏移,				参数个数,				属性
-FUNC_GETKERNELDATA_DESC	:	Gate		FunctionSelector,	getKData,			0,					DA_386CGate + DA_DPL3
+CODE32_DESC			:		Descriptor	0, 				Code32SegLen  - 1,		DA_C + DA_32
+DATA32_DESC			:		Descriptor	0, 				Data32SegLen  - 1,		DA_DRW + DA_32
+STACK32_DESC		:		Descriptor	0, 				TopOfStack32,			DA_DRW + DA_32
+DISPLAY_DESC		:		Descriptor	0xB8000, 		0x07FFF,				DA_DRWA + DA_32
+PAGE_DIR_DESC		:		Descriptor	PageDirBase,	4095,					DA_DRW + DA_32
+PAGE_TBL_DESC		:		Descriptor	PageTblBase,	1023,					DA_DRW + DA_LIMIT_4K + DA_32
 
 ; GDT end
 
@@ -30,56 +27,26 @@ GdtPtr:
 	dd 0
 
 ;GDT Selector 选择子
-Code32Selector			equ (0x0001 << 3) + SA_TIG + SA_RPL3
-Data32KernelSelector	equ (0x0002 << 3) + SA_TIG + SA_RPL0
-Stack32KernelSelector	equ (0x0003 << 3) + SA_TIG + SA_RPL0
-Data32UserSelector		equ (0x0004 << 3) + SA_TIG + SA_RPL3
-Stack32UserSelector		equ (0x0005 << 3) + SA_TIG + SA_RPL3
-DisplaySelector			equ (0x0006 << 3) + SA_TIG + SA_RPL3
-FunctionSelector		equ (0x0007 << 3) + SA_TIG + SA_RPL0
-TSSSelector				equ (0x0008 << 3) + SA_TIG + SA_RPL0
-; Gate Selector
-getKernelDataSelector	equ (0x0009 << 3) + SA_TIG + SA_RPL3
+Code32Selector			equ (0x0001 << 3) + SA_TIG + SA_RPL0
+Data32Selector			equ (0x0002 << 3) + SA_TIG + SA_RPL0
+Stack32Selector			equ (0x0003 << 3) + SA_TIG + SA_RPL0
+DisplaySelector			equ (0x0004 << 3) + SA_TIG + SA_RPL0
+PageDirSelector			equ (0x0005 << 3) + SA_TIG + SA_RPL0
+PageTblSelector			equ (0x0006 << 3) + SA_TIG + SA_RPL0
+
 ;end of [section .gdt]
-
-[section .tss]
-[bits 32]
-TSS_SEG:
-	dd		0
-	dd		TopOfKernelStack32		; 0
-	dd		Stack32KernelSelector	;
-	dd		0						; 1
-	dd		0						;
-	dd		0						; 2
-	dd		0						;
-	times	4 * 18	dd 0
-	dw		0
-	dw		$ - TSS_SEG + 2
-	db		0xFF
-
-TSSLen equ $ - TSS_SEG
 	
 TopOfStack16    equ 0x7c00
 
-;全局数据段,特权级0
-[section .dat0]
+[section .dat]
 [bits 32]
-DATA32_KERNEL_SEG:
-	KData				db  "Kernel Data", 0
-	KDataLen			equ $ - KData
-	KData_OFFSET		equ KData - $$
+DATA32_SEG:
+	AARON				db  "Aaron", 0
+	AARON_OFFSET		equ AARON - $$
+	HELLO_WORLD			db  "Hello World!", 0
+	HELLO_WORLD_OFFSET	equ HELLO_WORLD - $$
 
-Data32KernelSegLen equ $ - DATA32_KERNEL_SEG
-
-;全局数据段,特权级2
-[section .dat2]
-[bits 32]
-DATA32_USER_SEG:
-	UData				db  "User   Data", 0
-	UDataLen			equ $ - UData
-	UData_OFFSET		equ UData - $$
-
-Data32UserSegLen equ $ - DATA32_USER_SEG
+Data32SegLen equ $ - DATA32_SEG
 
 [section .s16]
 [bits 16]
@@ -97,36 +64,14 @@ ENTRY_SEG:
 	call initDescItem
     
 	; initialize GDT for 32 bits kernel data segment
-	mov esi, DATA32_KERNEL_SEG
-	mov edi, DATA32_KERNEL_DESC
+	mov esi, DATA32_SEG
+	mov edi, DATA32_DESC
 	
 	call initDescItem
 	
 	; initialize GDT for 32 bits kernel stack segment
-	mov esi, STACK32_KERNEL_SEG
-	mov edi, STACK32_KERNEL_DESC
-	
-	call initDescItem
-	
-	; initialize GDT for 32 bits user data segment
-	mov esi, DATA32_USER_SEG
-	mov edi, DATA32_USER_DESC
-	
-	call initDescItem
-	
-	; initialize GDT for 32 bits user stack segment
-	mov esi, STACK32_USER_SEG
-	mov edi, STACK32_USER_DESC
-	
-	call initDescItem
-	
-	mov esi, FUNCTION_SEG
-	mov edi, FUNCTION_DESC
-	
-	call initDescItem
-	
-	mov esi, TSS_SEG
-	mov edi, TSS_DESC
+	mov esi, STACK32_SEG
+	mov edi, STACK32_DESC
 	
 	call initDescItem
 	
@@ -152,18 +97,9 @@ ENTRY_SEG:
 	mov eax, cr0
 	or eax, 0x01
 	mov cr0, eax
-
-	; 5. load TSS
-	mov ax, TSSSelector
-	ltr ax
 	
-	; 6.jump to 32 bits code 
-	;jmp dword Code32Selector : 0
-	push Stack32UserSelector
-	push TopOfUserStack32
-	push Code32Selector    
-	push 0                 
-	retf
+	; 5.jump to 32 bits code 
+	jmp dword Code32Selector : 0
 	
 ; esi --> code segment label
 ; edi --> descriptor label
@@ -192,26 +128,82 @@ CODE32_SEG:
 	; 设置显存选择子
 	mov ax, DisplaySelector
 	mov gs, ax
-	
+
 	; 设置数据段选择子
-	mov ax, Data32UserSelector
-	mov es, ax
-	
-	mov di, UData_OFFSET
-	
-	call getKernelDataSelector : 0
-	
-	mov ax, Data32UserSelector
+	mov ax, Data32Selector
 	mov ds, ax
+
+	; 设置栈段选择子
+	mov ax, Stack32Selector
+	mov ss, ax
+
+	mov eax, TopOfStack32
+	mov esp, eax
 	
-	mov ebp, UData_OFFSET
+	mov ebp, AARON_OFFSET
 	mov bx, 0x0C
 	mov dh, 12
 	mov dl, 33
 	
 	call printString
 	
+	mov ebp, HELLO_WORLD_OFFSET
+	mov bx, 0x0C
+	mov dh, 13
+	mov dl, 31
+	
+	call printString
+	
 	jmp $
+
+; 开启分页
+setupPage:
+	push eax
+	push ecx
+	push edi
+	push es
+
+	mov ax, PageDirSelector
+	mov es, ax
+	mov ecx, 1024	; 1k个子页表
+	mov edi, 0
+	mov eax, PageTblBase | PG_P | PG_USU | PG_RWW
+
+	cld
+
+stdir:
+	; 传送指令 ,stosb,stosbw,stosd,将al,ax,eax 的值存储到edi指向的内存单元中
+	; 使用 方向标志位cld或者std，edi 增加或减少
+	stosd
+	add eax, 4096
+	loop stdir
+
+	mov ax, PageTblSelector
+	mov es, ax
+	mov ecx, 1024 * 1024	; 1M个页
+	mov edi, 0
+	mov eax, PG_P | PG_USU | PG_RWW
+
+	cld
+
+sttlb:
+	stosd
+	add eax, 4096
+	loop sttlb
+	
+
+	mov eax, PageDirBase
+	mov cr3, eax
+	mov eax, cr0
+	or eax, 0x80000000
+	mov cr0, eax
+
+	pop es
+	pop edi
+	pop ecx
+	pop eax
+
+	ret
 	
 ; ds:ebp    --> string address
 ; bx        --> attribute
@@ -255,105 +247,11 @@ endPrint:
 	
 Code32SegLen	equ $ - CODE32_SEG
 
-[section .func]
+[section .gs]
 [bits 32]
-FUNCTION_SEG:
+STACK32_SEG:
+	times 1024 * 4 db 0
 
-; es:di --> data buffer 
-GetKernelData:
-	; 将压入栈的段地址取出，拿到真实的权限等级
-	mov cx, [esp + 4]
-	and cx, 0x0003
-	; 再取出目标段地址的前14位
-	mov ax, es
-	and ax, 0xFFFC
-	; 将他们组合成真实的当前段地址+权限
-	or ax, cx
-	mov es, ax
-	
-	mov ax, Data32KernelSelector
-	mov ds, ax
-	
-	mov si, KData_OFFSET
-	mov cx, KDataLen
-	
-	call KMemCpy
-	
-	retf
+Stack32SegLen equ $ - STACK32_SEG
 
-; ds:si --> source
-; es:di --> destination
-; cx    --> length
-KMemCpy:
-	mov ax, es
-	
-	call checkRPL
-	
-	cmp si, di
-	ja tailToStart
-	add si, cx
-	add di, cx
-	dec si
-	dec di
-	jmp startToTail
-tailToStart:
-	cmp cx, 0
-	jz cpyDone
-	mov al, [ds:si]
-	mov byte [es:di], al
-	inc si
-	inc di
-	dec cx
-	jmp tailToStart
-startToTail:
-	cmp cx, 0
-	jz cpyDone
-	mov al, [ds:si]
-	mov byte [es:di], al
-	dec si
-	dec di
-	dec cx
-	jmp startToTail
-cpyDone:
-	ret
-	
-; ax --> selector value
-checkRPL:
-	; 检查目标段的段选择子权限等级
-	; 即去段的最后两位的大小与0对比
-	and ax, 0x0003
-	cmp ax, SA_RPL0
-	jz valid
-	
-	; 相当于在0低地址写入0值，模拟触发中断
-	mov ax, 0
-	mov fs, ax
-	mov byte [fs:0], 0
-	
-	
-valid:
-	ret
-	
-getKData equ GetKernelData - $$
-
-FunctionSegLen equ $ - FUNCTION_SEG
-
-
-; 定义32位的特权级为0的内核栈段
-[section .kgs]
-[bits 32]
-STACK32_KERNEL_SEG:
-	times 1024 db 0
-	
-Stack32KernelSegLen equ $ - STACK32_KERNEL_SEG
-TopOfKernelStack32  equ Stack32KernelSegLen - 1
-
-; 定义32位的特权级为3的用户栈段
-[section .ugs]
-[bits 32]
-STACK32_USER_SEG:
-	times 1024 db 0
-	
-Stack32UserSegLen equ $ - STACK32_USER_SEG
-TopOfUserStack32  equ Stack32UserSegLen - 1
-
+TopOfStack32  equ Stack32SegLen - 1
