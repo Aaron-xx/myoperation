@@ -26,6 +26,9 @@ PAGE_TBL_DESC0		:		Descriptor	PageTblBase0,	1023,					DA_DRW + DA_LIMIT_4K + DA_
 PAGE_DIR_DESC1		:		Descriptor	PageDirBase1,	4095,					DA_DRW + DA_32
 PAGE_TBL_DESC1		:		Descriptor	PageTblBase1,	1023,					DA_DRW + DA_LIMIT_4K + DA_32
 FLAT_MODE_RW_DESC	:		Descriptor	0,				0xFFFFF,				DA_DRW + DA_LIMIT_4K + DA_32
+FUNC32_DESC			:		Descriptor	0,				Func32SegLen - 1,		DA_DR + DA_LIMIT_4K + DA_32
+FLAT_MODE_C_DESC	:		Descriptor	0,				0xFFFFF,				DA_C + DA_LIMIT_4K + DA_32
+
 ; GDT end
 
 GdtLen	equ		$ - GDT_ENTRY
@@ -44,6 +47,8 @@ PageTblSelector0		equ (0x0006 << 3) + SA_TIG + SA_RPL0
 PageDirSelector1		equ (0x0007 << 3) + SA_TIG + SA_RPL0
 PageTblSelector1		equ (0x0008 << 3) + SA_TIG + SA_RPL0
 FlatModeSelector		equ (0x0009 << 3) + SA_TIG + SA_RPL0
+Func32Selector			equ (0x000A << 3) + SA_TIG + SA_RPL0
+FlatCModeSelector		equ (0x000B << 3) + SA_TIG + SA_RPL0
 ;end of [section .gdt]
 	
 TopOfStack16    equ 0x7c00
@@ -84,6 +89,11 @@ ENTRY_SEG:
 	; initialize GDT for 32 bits kernel stack segment
 	mov esi, STACK32_SEG
 	mov edi, STACK32_DESC
+	
+	call initDescItem
+
+	mov esi, FUNC32_SEG
+	mov edi, FUNC32_DESC
 	
 	call initDescItem
 	
@@ -134,16 +144,51 @@ initDescItem:
 	
 	ret
 
+[section .func]
+[bits 32]
+FUNC32_SEG:
+; cx --> n
+; return:
+;     eax --> n * n
+Sqr:
+	mov eax, 0
+    
+	mov ax, cx
+	mul cx
+    
+	retf
+    
+SqrLen  equ  $ - Sqr
+SqrFunc equ  Sqr - $$
+
+; cx --> n
+; return:
+;     eax --> 1 + 2 + 3 + ... + n
+Acc:
+	push cx
+    
+	mov eax, 0
+    
+accLoop:
+	add ax, cx
+	loop accLoop
+    
+	pop cx
+    
+	retf
+    
+AccLen  equ  $ - Acc
+AccFunc equ  Acc - $$
+
+Func32SegLen  equ  $ - FUNC32_SEG
+
+
 [section .s32]
 [bits 32]
 CODE32_SEG:
 	; 设置显存选择子
 	mov ax, DisplaySelector
 	mov gs, ax
-
-	; 设置数据段选择子
-	mov ax, Data32Selector
-	mov ds, ax
 
 	; 设置栈段选择子
 	mov ax, Stack32Selector
@@ -152,18 +197,21 @@ CODE32_SEG:
 	mov eax, TopOfStack32
 	mov esp, eax
 
+	mov ax, Func32Selector
+	mov ds, ax
+
 	mov ax, FlatModeSelector
 	mov es, ax
 
-	mov esi, AARON_OFFSET
+	mov esi, SqrFunc
 	mov edi, TargetAddr1
-	mov ecx, AARON_LEN
+	mov ecx, SqrLen
 
 	call memCpy
 
-	mov esi, HELLO_WORLD_OFFSET
+	mov esi, AccFunc
 	mov edi, TargetAddr2
-	mov ecx, HELLO_WORLD_LEN
+	mov ecx, AccLen
 
 	call memCpy
 
@@ -181,13 +229,13 @@ CODE32_SEG:
 
 	mov eax, SourceAddr
 	mov ebx, TargetAddr1
-	mov ecx, PageDirBase0
+	mov ecx, SqrLen
 
 	call mapAddress
 
 	mov eax, SourceAddr
 	mov ebx, TargetAddr2
-	mov ecx, PageDirBase1
+	mov ecx, AccLen
 
 	call mapAddress
 
@@ -195,18 +243,17 @@ CODE32_SEG:
 
 	call switchPageTable
 
+	mov ecx, 100
+
+	call FlatCModeSelector : TargetAddr1
+
 	mov eax, PageDirBase1
 
 	call switchPageTable
 
-	mov ax, FlatModeSelector
-	mov ds, ax
-	mov ebp, SourceAddr
-	mov bx, 0x0C
-	mov dh, 13
-	mov dl, 31
-	
-	call printString
+	mov ecx, 100
+
+	call FlatCModeSelector : TargetAddr2
 
 	jmp $
 
