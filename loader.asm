@@ -39,6 +39,8 @@ DATA32_SEG:
 
 Data32SegLen equ $ - DATA32_SEG
 
+MEM_SIZE times 4 db 0
+
 [section .s16]
 [bits 16]
 ENTRY_SEG:
@@ -112,6 +114,43 @@ initDescItem:
 	pop eax
 	
 	ret
+
+getMemSize:
+	push eax
+	push ebx
+	push ecx
+
+	xor eax, eax
+	mov eax, 0xE801
+
+	int 0x15
+
+	jc error
+
+	shl eax, 10	; eax = eax * 1024
+
+	shl ebx, 6	; eax = eax * 64
+	shl ebx, 10	; eax = eax * 1024
+
+	mov ecx, 1
+	shl ecx, 20	; eax = 1MB
+
+	add dword [MEM_SIZE], eax
+	add dword [MEM_SIZE], ebx
+	add dword [MEM_SIZE], ecx
+
+	jmp getit
+
+error:
+	mov dword [MEM_SIZE], 0
+
+getit:
+	pop ecx
+	pop ebx
+	pop eax
+
+	ret
+
 
 [section .s32]
 [bits 32]
