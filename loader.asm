@@ -12,6 +12,7 @@ CODE32_DESC			:		Descriptor	0, 				Code32SegLen  - 1,		DA_C + DA_32
 DATA32_DESC			:		Descriptor	0, 				Data32SegLen  - 1,		DA_DRW + DA_32
 STACK32_DESC		:		Descriptor	0, 				TopOfStack32,			DA_DRW + DA_32
 DISPLAY_DESC		:		Descriptor	0xB8000, 		0x07FFF,				DA_DRWA + DA_32
+SYSDATA32_DESC		:		Descriptor	0,				SysData32SegLen - 1,	DA_DR + DA_32
 ; GDT end
 
 GdtLen	equ		$ - GDT_ENTRY
@@ -25,9 +26,17 @@ Code32Selector			equ (0x0001 << 3) + SA_TIG + SA_RPL0
 Data32Selector			equ (0x0002 << 3) + SA_TIG + SA_RPL0
 Stack32Selector			equ (0x0003 << 3) + SA_TIG + SA_RPL0
 DisplaySelector			equ (0x0004 << 3) + SA_TIG + SA_RPL0
+SysData32Selector		equ (0x0005 << 3) + SA_TIG + SA_RPL0
 ;end of [section .gdt]
 	
 TopOfStack16    equ 0x7c00
+
+[section .d16]
+DATA16_SEG:
+	MEM_ERR_MSG		db "[FAILED] memory check error..."
+	MEM_ERR_MSG_LEN	equ $ - MEM_ERR_MSG
+
+Data16SegLen	equ $ - DATA16_SEG
 
 [section .dat]
 [bits 32]
@@ -39,7 +48,16 @@ DATA32_SEG:
 
 Data32SegLen equ $ - DATA32_SEG
 
-MEM_SIZE times 4 db 0
+[section .sysdat]
+SYSDATA32_SEG:
+	MEM_SIZE			times	4	db	0
+	MEM_SIZE_OFFSET		equ		MEM_SIZE - $$
+	MEM_ARDS_NUM		times	4	db	0
+	MEM_ARDS_NUM_OFFSET	equ		MEM_ARDS_NUM - $$
+	MEM_ARDS			times	64 * 20 db 0
+	MEM_ARDS_OFFSET		equ		MEM_ARDS - $$
+
+SysData32SegLen		equ $ - SYSDATA32_SEG
 
 [section .s16]
 [bits 16]
@@ -49,6 +67,13 @@ ENTRY_SEG:
 	mov es, ax
 	mov ss, ax
 	mov sp, TopOfStack16
+
+	; get system memory information
+	call InitSysMemBuf
+
+	cmp eax, 0
+
+	jnz CODE16_MEM_ERROR
 	
 	; initialize GDT for 32 bits code segment
 	mov esi, CODE32_SEG
@@ -65,6 +90,11 @@ ENTRY_SEG:
 	; initialize GDT for 32 bits kernel stack segment
 	mov esi, STACK32_SEG
 	mov edi, STACK32_DESC
+	
+	call initDescItem
+
+	mov esi, SYSDATA32_SEG
+	mov edi, SYSDATA32_DESC
 	
 	call initDescItem
 	
@@ -94,6 +124,23 @@ ENTRY_SEG:
 	; 5.jump to 32 bits code 
 	jmp dword Code32Selector : 0
 	
+CODE16_MEM_ERROR:
+	mov bp, MEM_ERR_MSG
+	mov cx, MEM_ERR_MSG_LEN
+
+	call Print
+	jmp $
+
+; es:bp --> string address
+; cx    --> string length
+Print:
+	mov dx, 0
+	mov ax, 0x1301
+	mov bx, 0x0007
+	int 0x10
+	
+	ret
+
 ; esi --> code segment label
 ; edi --> descriptor label
 initDescItem:
@@ -151,6 +198,70 @@ getit:
 
 	ret
 
+; return 
+;    eax  --> 0 : succeed      1 : failed
+InitSysMemBuf:
+	push edi
+	push ebx
+	push ecx
+	push edx
+
+	call getMemSize
+
+	mov edi, MEM_ARDS
+	mov ebx, 0
+
+readLoop:
+	mov eax, 0xE820
+	mov edx, 0x534D4150
+	mov ecx, 20
+
+	int 0x15
+
+	jc memErr
+
+	; 取得内存段中内存范围最大的几位最大物理地址
+
+	; 查看type的值，type值为1,则系统可用，为2则为操作系统不可用段
+	; 若为3,则为为定义段，可当作type为1处理
+	; 此时仅考虑type为1的情况，所以得到的结果可能比实际物理内存要小
+	cmp dword [edi + 16], 1
+	jne next
+
+	; 计算取得当前段的内存地址范围
+	mov eax, [edi]
+	add eax, [edi + 8]
+
+	; 若当前求得的内存范围小于MEM_SIZE地址中的值
+	; 则进入下一次循环，否则，将当前计算得到的内存放入MEM_SIZE地址中
+	cmp dword [MEM_SIZE], eax
+	jnb next
+
+	mov dword [MEM_SIZE], eax
+
+next:
+	add edi, 20
+	inc dword [MEM_ARDS_NUM]
+
+	cmp ebx, 0
+	jne readLoop
+
+	mov eax, 0
+
+	jmp memOk
+
+memErr:
+	mov dword [MEM_SIZE], 0
+	mov dword [MEM_ARDS_NUM], 0
+	mov eax, 1
+
+memOk:
+	pop edx
+	pop ecx
+	pop ebx
+	pop edi
+
+	ret
 
 [section .s32]
 [bits 32]
