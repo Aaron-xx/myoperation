@@ -27,7 +27,36 @@ Data32Selector			equ (0x0002 << 3) + SA_TIG + SA_RPL0
 Stack32Selector			equ (0x0003 << 3) + SA_TIG + SA_RPL0
 DisplaySelector			equ (0x0004 << 3) + SA_TIG + SA_RPL0
 ;end of [section .gdt]
-	
+
+[section .idt]
+align 32
+[bits 32]
+IDT_ENTRY:
+; IDT definition
+;							Selector,			Offset,		DCount,		Attribute
+%rep 32
+				Gate	Code32Selector,		DefaultHandler,		0,		DA_386IGate
+%endrep
+
+Int0x20		:	Gate	Code32Selector,		TimerHandler,		0,		DA_386IGate
+
+%rep 95
+				Gate	Code32Selector,		DefaultHandler,		0,		DA_386IGate
+%endrep
+
+Int0x80		:	Gate	Code32Selector,		Int0x80Handler,		0,		DA_386IGate
+
+%rep 127
+				Gate	Code32Selector,		DefaultHandler,		0,		DA_386IGate
+%endrep
+
+IdtLen equ $ - IDT_ENTRY
+
+IdtPtr:
+	dw IdtLen - 1
+	dd 0
+; end of [section .idt]
+
 TopOfStack16    equ 0x7c00
 
 [section .dat]
@@ -35,8 +64,8 @@ TopOfStack16    equ 0x7c00
 DATA32_SEG:
 	AARON				db  "Aaron.OS", 0
 	AARON_OFFSET		equ AARON - $$
-	HELLO_WORLD			db  "Hello World!", 0
-	HELLO_WORLD_OFFSET	equ HELLO_WORLD - $$
+	INT_80H				db  "int 0x80", 0
+	INT_80H_OFFSET		equ INT_80H - $$
 
 Data32SegLen equ $ - DATA32_SEG
 
@@ -73,6 +102,13 @@ ENTRY_SEG:
 	shl eax, 4
 	add eax, GDT_ENTRY
 	mov dword [GdtPtr + 2], eax
+
+	; initialize IDT pointer struct
+	mov eax, 0
+	mov ax, ds
+	shl eax, 4
+	add eax, IDT_ENTRY
+	mov dword [IdtPtr + 2], eax
 	
 	; 1.load GDT
 	lgdt [GdtPtr]
@@ -80,6 +116,9 @@ ENTRY_SEG:
 	; 2.close interrupt
 	cli
 	
+	; 加载中断向量表
+	lidt [IdtPtr]
+
 	; 3.open A20 地址线
 	in al, 0x92
 	or al, 00000010b
@@ -131,6 +170,18 @@ CODE32_SEG:
 	mov eax, TopOfStack32
 	mov esp, eax
 
+	call Init8259A
+
+	mov ax, 0xFF
+	mov dx, MASTER_IMR_PORT
+
+	call WriteIMR
+
+	mov ax, 0xFF
+	mov dx, SLAVE_IMR_PORT
+
+	call WriteIMR
+
 	mov ebp, AARON_OFFSET
 	mov bx, 0x0C
 	mov dh, 12
@@ -138,8 +189,167 @@ CODE32_SEG:
 
 	call printString
 
-	jmp $
+	mov ebp, INT_80H_OFFSET
+	mov bx, 0x0C
+	mov dh, 13
+	mov dl, 33
+
+	int 0x80
 	
+	sti
+
+	call EnableTimer
+
+	jmp $
+
+EnableTimer:
+	push ax
+	push dx
+
+	mov ah, 0x0C
+	mov al, '0'
+	mov [gs:((80 * 14 + 36) * 2)], ax
+	
+	mov dx, MASTER_IMR_PORT
+
+	call ReadIMR
+
+	and ax, 0xFE
+
+	call WriteIMR
+
+	pop dx
+	pop ax
+
+	ret
+
+;
+;
+Init8259A:
+	push ax
+
+	; master 
+	; ICW1
+	mov al, 00010001B			; 边沿触发中断，多片级联
+	out MASTER_ICW1_PORT, al
+
+	call Delay
+
+	mov al, 0x20				; IRO 中断向量为0x20
+	out MASTER_ICW2_PORT, al
+
+	call Delay
+
+	mov al, 00000100B			; 从片级联至IR2引脚
+	out MASTER_ICW3_PORT, al
+
+	call Delay
+
+	mov al, 00010001B			; 特殊全嵌套，非缓冲数据连接，手动结束中断
+	out MASTER_ICW4_PORT, al
+
+	call Delay
+
+	; slave
+	; ICW1
+	mov al, 00010001B			; 边沿触发中断，多片级联
+	out SLAVE_ICW1_PORT, al
+
+	call Delay
+
+	mov al, 0x28				; IRO 中断向量为0x28
+	out SLAVE_ICW2_PORT, al
+
+	call Delay
+
+	mov al, 00000010B			; 级联至主片IR2引脚
+	out SLAVE_ICW3_PORT, al
+
+	call Delay
+
+	mov al, 00000001B			; 普通全嵌套，非缓冲数据连接，手动结束中断
+	out SLAVE_ICW4_PORT, al
+
+	call Delay
+
+	pop ax
+	ret
+;
+;
+Delay:
+	%rep 5
+	nop
+	%endrep
+	ret
+
+; al --> IMR register value
+; dx --> 8259A port
+WriteIMR:
+	out dx, al
+	call Delay
+	ret
+
+; dx --> 8259A
+; return:
+;     ax --> IMR register value
+ReadIMR:
+	in ax, dx
+	call Delay
+	ret
+
+;
+; dx --> 8259A port
+WriteEOI:
+	push ax
+
+	; 结束正在处理的中断
+	mov al, 0x20
+	out dx, al
+
+	call Delay
+
+	pop ax
+
+	ret
+
+DefaultHandlerFunc:
+	iret
+
+DefaultHandler equ DefaultHandlerFunc -$$
+
+Int0x80HandlerFunc:
+	call printString
+	iret
+
+Int0x80Handler equ Int0x80HandlerFunc -$$
+
+TimerHandlerFunc:
+	push ax
+	push dx
+
+	mov ax, [gs:((80 * 14 + 36) * 2)]
+
+	cmp al, '9'
+	je throtate
+	inc al
+	jmp thshow
+
+throtate:
+	mov al, '0'
+
+thshow:
+	mov [gs:((80 * 14 + 36) * 2)], ax
+
+	mov dx, MASTER_OCW2_PORT
+	call WriteEOI
+
+	pop dx
+	pop ax
+
+	iret
+
+TimerHandler equ TimerHandlerFunc -$$
+
 ; ds:ebp    --> string address
 ; bx        --> attribute
 ; dx        --> dh : row, dl : col
