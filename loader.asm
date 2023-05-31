@@ -1,22 +1,22 @@
-BaseOfLoader equ 0x9000
-
-org BaseOfLoader
-
 %include "blfunc.asm"
 %include "common.asm"
 
+org BaseOfLoader
+
 interface:
 	BaseOfStack		equ		BaseOfLoader
-	BaseOfTarget	equ		0xB000
+	BaseOfTarget	equ		BaseOfKernel
 	tarStr	db "KERNEL     "
 	tarLen	equ ($-tarStr)
 
 [section .gdt]
 ; GDT definition
-;						 	段基址，					段界限，				段属性
-GDT_ENTRY			:		Descriptor	0,				0,						0
-CODE32_FLAT_DESC	:		Descriptor	0, 				0xFFFFF,				DA_C + DA_32
-CODE32_DESC			:		Descriptor	0, 				Code32SegLen  - 1,		DA_C + DA_32
+;						 				段基址，					段界限，				段属性
+GDT_ENTRY			:		Descriptor	0,							0,						0
+CODE32_FLAT_DESC	:		Descriptor	0, 							0xFFFFF,				DA_C + DA_32 + DA_DPL0
+CODE32_DESC			:		Descriptor	0, 							Code32SegLen  - 1,		DA_C + DA_32 + DA_DPL0
+DATA32_FLAT_DESC	:		Descriptor	0, 							0xFFFFF,				DA_DRW + DA_32 + DA_DPL0
+DISPLAY_DESC		:		Descriptor	0xB8000, 					0x07FFF,				DA_DRWA + DA_32 + DA_DPL0
 
 ; GDT end
 
@@ -29,21 +29,12 @@ GdtPtr:
 ;GDT Selector 选择子
 Code32FlatSelector		equ (0x0001 << 3) + SA_TIG + SA_RPL0
 Code32Selector			equ (0x0002 << 3) + SA_TIG + SA_RPL0
+Data32FlatSelector		equ (0x0003 << 3) + SA_TIG + SA_RPL0
+DisplaySelector			equ (0x0004 << 3) + SA_TIG + SA_RPL0
+
 ;end of [section .gdt]
 	
 TopOfStack16    equ 0x7c00
-
-[section .dat]
-[bits 32]
-DATA32_SEG:
-	AARON				db  "Aaron.OS", 0
-	AARON_LEN			equ $ - AARON
-	AARON_OFFSET		equ AARON - $$
-	HELLO_WORLD			db  "Hello World!", 0
-	HELLO_WORLD_LEN		equ $ - HELLO_WORLD
-	HELLO_WORLD_OFFSET	equ HELLO_WORLD - $$
-
-Data32SegLen equ $ - DATA32_SEG
 
 [section .s16]
 [bits 16]
@@ -67,7 +58,7 @@ BLMain:
 	add eax, GDT_ENTRY
 	mov dword [GdtPtr + 2], eax
 
-	call loaderTarget
+	call loadTarget
 
 	cmp dx, 0
 	jz err
@@ -131,19 +122,21 @@ initDescItem:
 [section .s32]
 [bits 32]
 CODE32_SEG:
-jmp Code32FlatSelector : BaseOfTarget
-	
+	mov ax, DisplaySelector
+	mov gs, ax
+
+	mov ax, Data32FlatSelector
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+
+	mov ax, Data32FlatSelector
+	mov ss, ax
+	mov esp, BaseOfLoader
+
+	jmp dword Code32FlatSelector : BaseOfKernel
 	
 Code32SegLen	equ $ - CODE32_SEG
-
-[section .gs]
-[bits 32]
-STACK32_SEG:
-	times 1024 * 4 db 0
-
-Stack32SegLen equ $ - STACK32_SEG
-
-TopOfStack32  equ Stack32SegLen - 1
 
 errStr db  "NO KERNEL"	
 errLen equ ($-errStr)

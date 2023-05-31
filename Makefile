@@ -15,7 +15,7 @@ MKDIR		:= mkdir
 CP			:= cp
 
 kernel_addr	:= B000
-img			:= Aaron.img
+img			:= Aaron
 mnt			:= mnt
 
 dir_deps	:= deps
@@ -30,7 +30,7 @@ boot_src	:= boot.asm
 loader_src	:= loader.asm
 kentry_src	:= kentry.asm
 
-kernel_src	:= kmain.c
+kernel_src	:= kmain.c screen.c
 
 boot_out	:= boot
 loader_out	:= loader
@@ -40,7 +40,8 @@ kentry_out	:= $(dir_objs)/kentry.o
 bin			:= kernel.bin
 bin			:= $(addprefix $(dir_bins)/, $(bin))
 
-srcs		:= $(wildcard *.c)
+#srcs		:= $(wildcard *.c)
+srcs		:= $(kernel_src)
 objs		:= $(srcs:.c=.o)
 objs		:= $(addprefix $(dir_objs)/, $(objs))
 deps		:= := $(srcs:.c=.dep)
@@ -48,8 +49,16 @@ deps		:= $(addprefix $(dir_deps)/, $(deps))
 
 .PHONY: all
 
-all: $(mnt) $(img) $(dir_objs) $(dir_deps) $(boot_out) $(loader_out) $(kentry_out) $(kernel_out)
+all: $(mnt) $(img) $(dir_objs) $(dir_bins) $(dir_deps) $(boot_out) $(loader_out) $(kentry_out) $(kernel_out)
 	@echo "succeed! ==> Aaron.OS"
+
+ifeq ("$(MAKECMDGOALS)", "all")
+-include $(DEPS)
+endif
+
+ifeq ("$(MAKECMDGOALS)", "")
+-include $(DEPS)
+endif
 
 $(img): 
 	@dd if=/dev/zero of=$@  bs=512 count=2880
@@ -69,7 +78,7 @@ $(kentry_out): $(kentry_src) $(common_src)
 	$(NASM) $(NASMFLAGS) $< -o $@
 
 $(kernel_out): $(bin)
-	./elf2kobj -c$(kernel_addr) $< -o $@
+	objcopy --set-start 0xB000 $< -O binary $@
 	@sudo $(MOUNT) -o loop $(img) $(mnt)
 	@sudo $(CP) $@ $(mnt)/$@
 	@sudo $(UMOUNT) $(mnt)

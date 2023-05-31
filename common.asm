@@ -1,3 +1,8 @@
+; Global Variable
+BaseOfBoot    equ    0x7C00
+BaseOfLoader  equ    0x9000
+BaseOfKernel  equ    0xB000
+
 ; PIC-8259A Ports 
 MASTER_ICW1_PORT                        equ     0x20
 MASTER_ICW2_PORT                        equ     0x21
@@ -27,6 +32,8 @@ SLAVE_ISR_PORT                          equ     0xA0
 
 ; Segment Attribute
 DA_32    equ    0x4000		; 32 位段
+DA_LIMIT_4K    EQU       0x8000
+
 DA_DR    equ    0x90		; 只读数据段
 DA_DRW   equ    0x92		; 可读写数据段
 DA_DRWA  equ    0x93		; 已访问可读写数据段

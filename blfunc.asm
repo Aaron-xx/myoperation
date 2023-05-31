@@ -37,7 +37,7 @@ _start:
 
 ; return:
 ;     dx --> (dx != 0) ? success : failure
-loaderTarget:
+loadTarget:
 	mov ax, RootEntryOffset
 	mov cx, RootEntryLength
 	mov bx, Buffer
@@ -77,6 +77,8 @@ loaderTarget:
 	
 	mov dx, [EntryItem + 0x1A]
 	mov si, BaseOfTarget / 0x10
+	mov es, si
+	mov si, 0
 
 ; tip:
 ; dx == fat index
