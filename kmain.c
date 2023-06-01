@@ -1,14 +1,31 @@
 #include "kernel.h"
 #include "screen.h"
+#include "global.h"
 
 void KMain()
 {
 
     PrintString("Aaron.OS\n");
+    uint base = 0;
+    uint limit = 0;
+    ushort attr = 0;
+    int i = 0;
 
-    PrintIntDec(600);
-
+    PrintString("GDT Entry:\n");
+    PrintIntHex((uint)gGdtInfo.entry);
     PrintChar('\n');
 
-    PrintIntHex(16);
+    for ( i = 0; i < gGdtInfo.size; i++)
+    {
+        GetDescValue(gGdtInfo.entry + i, &base, &limit, &attr);
+
+        PrintIntHex(base);
+        PrintString("   ");
+
+        PrintIntHex(limit);
+        PrintString("   ");
+
+        PrintIntHex(attr);
+        PrintChar('\n');
+    }
 }

@@ -18,7 +18,7 @@ BLMain:
 	mov ss, ax
 	mov sp, SPInitValue
 
-	call loadTarget
+	call LoadTarget
 
 	cmp dx, 0
 	jz err

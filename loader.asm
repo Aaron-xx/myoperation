@@ -13,10 +13,10 @@ interface:
 ; GDT definition
 ;						 				段基址，					段界限，				段属性
 GDT_ENTRY			:		Descriptor	0,							0,						0
-CODE32_FLAT_DESC	:		Descriptor	0, 							0xFFFFF,				DA_C + DA_32 + DA_DPL0
 CODE32_DESC			:		Descriptor	0, 							Code32SegLen  - 1,		DA_C + DA_32 + DA_DPL0
+VIDEO_DESC			:		Descriptor	0xB8000, 					0x07FFF,				DA_DRWA + DA_32 + DA_DPL0
+CODE32_FLAT_DESC	:		Descriptor	0, 							0xFFFFF,				DA_C + DA_32 + DA_DPL0
 DATA32_FLAT_DESC	:		Descriptor	0, 							0xFFFFF,				DA_DRW + DA_32 + DA_DPL0
-DISPLAY_DESC		:		Descriptor	0xB8000, 					0x07FFF,				DA_DRWA + DA_32 + DA_DPL0
 
 ; GDT end
 
@@ -27,10 +27,10 @@ GdtPtr:
 	dd 0
 
 ;GDT Selector 选择子
-Code32FlatSelector		equ (0x0001 << 3) + SA_TIG + SA_RPL0
-Code32Selector			equ (0x0002 << 3) + SA_TIG + SA_RPL0
-Data32FlatSelector		equ (0x0003 << 3) + SA_TIG + SA_RPL0
-DisplaySelector			equ (0x0004 << 3) + SA_TIG + SA_RPL0
+Code32Selector			equ (0x0001 << 3) + SA_TIG + SA_RPL0
+VideoSelector			equ (0x0002 << 3) + SA_TIG + SA_RPL0
+Code32FlatSelector		equ (0x0003 << 3) + SA_TIG + SA_RPL0
+Data32FlatSelector		equ (0x0004 << 3) + SA_TIG + SA_RPL0
 
 ;end of [section .gdt]
 	
@@ -58,10 +58,12 @@ BLMain:
 	add eax, GDT_ENTRY
 	mov dword [GdtPtr + 2], eax
 
-	call loadTarget
+	call LoadTarget
 
 	cmp dx, 0
 	jz err
+
+	call StoreGlobal
 	
 	; 1.load GDT
 	lgdt [GdtPtr]
@@ -98,6 +100,13 @@ err:
 
 	jmp  $
 
+StoreGlobal:
+	mov eax, dword [GdtPtr + 2]
+	mov dword [GdtEntry], eax
+
+	mov dword [GdtSize], GdtLen / 8
+	ret
+
 ; esi --> code segment label
 ; edi --> descriptor label
 initDescItem:
@@ -122,7 +131,7 @@ initDescItem:
 [section .s32]
 [bits 32]
 CODE32_SEG:
-	mov ax, DisplaySelector
+	mov ax, VideoSelector
 	mov gs, ax
 
 	mov ax, Data32FlatSelector

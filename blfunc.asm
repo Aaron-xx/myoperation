@@ -37,20 +37,20 @@ _start:
 
 ; return:
 ;     dx --> (dx != 0) ? success : failure
-loadTarget:
+LoadTarget:
 	mov ax, RootEntryOffset
 	mov cx, RootEntryLength
 	mov bx, Buffer
 	
 	; 将根目录的文件内容复制到Buf处
-	call readSector
+	call ReadSector
 	
 	mov si, tarStr
 	mov cx, tarLen
 	mov dx, 0
 	
 	; 从Buf处的根目录文件中寻找要加载的程序
-	call findEntry
+	call FindEntry
 	
 	cmp dx, 0
 	jz finish
@@ -60,7 +60,7 @@ loadTarget:
 	mov cx, EntryItemLength
 	
 	; 将找到的 要加载的程序 复制到指定位置
-	call memCpy
+	call MemCpy
 	
 	; 设置Fat表的起始地址
 	mov ax, FatEntryLength
@@ -73,7 +73,7 @@ loadTarget:
 	mov cx, FatEntryLength
 	
 	; 将Fat表复制到 加载目标程序 之前
-	call readSector
+	call ReadSector
 	
 	mov dx, [EntryItem + 0x1A]
 	mov si, BaseOfTarget / 0x10
@@ -92,7 +92,7 @@ loading:
 	push bx
 	mov bx, si
 	; 将 要加载的程序 加载到 目标地址处，每次一个扇区
-	call readSector
+	call ReadSector
 	pop bx
 	; 将原来dx的值弹出到cx,其存放的为 fat dex,调用FatVec要用
 	pop cx
@@ -192,7 +192,7 @@ return:
 	ret
 
 ; no parameter
-resetSector:
+ResetSector:
 	push ax
 	push dx
 	
@@ -211,10 +211,10 @@ resetSector:
 ; ax	==> logic sector num
 ; cx	==> number of sector
 ; es:bx	==> target address
-readSector:
+ReadSector:
 	push bx
 	
-	call resetSector
+	call ResetSector
 	
 	push bx
 	push cx
@@ -259,7 +259,7 @@ read:
 ; ds:si --> source
 ; es:di --> destination
 ; cx    --> length
-memCpy:
+MemCpy:
 	; 判断源地址和目标地址的大小
 	; 为了在复制前不破坏数据，如果 源 < 目标
 	; 就需要从后向前复制，否则就正常复制
@@ -304,7 +304,7 @@ cpdone:
 ;
 ; return:
 ;        (cx == 0) ? equal : noequal
-memCmp:
+MemCmp:
 	push si
 	push di
 	
@@ -339,7 +339,7 @@ unequal:
 ; return:
 ;     (dx != 0) ? exist : noexist
 ;        exist --> bx is the target entry
-findEntry:
+FindEntry:
 	; 将cx入栈，之后每次循环都要使用
 	push cx
 	
@@ -355,7 +355,7 @@ find:
 	mov di, bx
 	; 每次都把栈顶的值给cx,栈顶存放的是之前压入的cx的值
 	mov cx, [bp]
-	call memCmp
+	call MemCmp
 	; cx为memCmp返回值
 	cmp cx, 0
 	jz exist

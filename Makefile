@@ -30,7 +30,7 @@ boot_src	:= boot.asm
 loader_src	:= loader.asm
 kentry_src	:= kentry.asm
 
-kernel_src	:= kmain.c screen.c
+kernel_src	:= kmain.c screen.c kernel.c global.c 
 
 boot_out	:= boot
 loader_out	:= loader
@@ -87,7 +87,7 @@ $(bin): $(kentry_out) $(objs)
 	$(LD) $(LDFLAGS) -s $^ -o $@
 
 $(dir_objs)/%.o : %.c
-	$(CC) $(CFLAGS) -m32 -o $@ -c $(filter %.c, $^)
+	$(CC) $(CFLAGS) -o $@ -c $(filter %.c, $^)
 
 $(dirs):
 	$(MKDIR) $(dirs)
