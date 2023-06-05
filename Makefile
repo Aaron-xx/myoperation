@@ -84,7 +84,7 @@ $(kernel_out): $(bin)
 	@sudo $(UMOUNT) $(mnt)
 
 $(bin): $(kentry_out) $(objs)
-	$(LD) $(LDFLAGS) -s $^ -o $@
+	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld.script
 
 $(dir_objs)/%.o : %.c
 	$(CC) $(CFLAGS) -o $@ -c $(filter %.c, $^)
