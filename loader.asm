@@ -35,6 +35,23 @@ Code32FlatSelector		equ (0x0003 << 3) + SA_TIG + SA_RPL0
 Data32FlatSelector		equ (0x0004 << 3) + SA_TIG + SA_RPL0
 
 ;end of [section .gdt]
+
+[section .idt]
+align 32
+[bits 32]
+IDT_ENTRY:
+; IDT definition
+;							Selector,				Offset,				DCount,				Attribute
+%rep 256
+				Gate      Code32Selector,			DefaultHandler,		0,					DA_386IGate + DA_DPL0
+%endrep
+
+IdtLen equ $ - IDT_ENTRY
+
+IdtPtr:
+	dw    IdtLen - 1
+	dd    0
+
 	
 TopOfStack16    equ 0x7c00
 
@@ -60,6 +77,12 @@ BLMain:
 	add eax, GDT_ENTRY
 	mov dword [GdtPtr + 2], eax
 
+	mov eax, 0
+	mov ax, ds
+	shl eax, 4
+	add eax, IDT_ENTRY
+	mov dword [IdtPtr + 2], eax
+
 	call LoadTarget
 
 	cmp dx, 0
@@ -73,6 +96,8 @@ BLMain:
 	; 2.close interrupt
 	; set IOPL to 3
 	cli
+
+	lidt [IdtPtr]
 
 	pushf
 	pop eax
@@ -104,11 +129,20 @@ err:
 
 StoreGlobal:
 	mov dword [RunTaskEntry], RunTask
+	mov dword [InitInterruptEntry], InitInterrupt
+	mov dword [EnableTimerEntry], EnableTimer
+	mov dword [SendEOIEntry], SendEOI
 
 	mov eax, dword [GdtPtr + 2]
 	mov dword [GdtEntry], eax
 
 	mov dword [GdtSize], GdtLen / 8
+
+	mov eax, dword [IdtPtr + 2]
+	mov dword [IdtEntry], eax
+
+	mov dword [IdtSize], IdtLen / 8
+	
 	ret
 
 ; esi --> code segment label
@@ -131,6 +165,99 @@ initDescItem:
 	pop eax
 	
 	ret
+
+[section .sfunc]
+[bits 32]
+;
+;
+Delay:
+	%rep 5
+	nop
+	%endrep
+	ret
+
+;
+;
+Init8259A:
+	push ax
+
+	; master 
+	; ICW1
+	mov al, 00010001B			; 边沿触发中断，多片级联
+	out MASTER_ICW1_PORT, al
+
+	call Delay
+
+	mov al, 0x20				; IRO 中断向量为0x20
+	out MASTER_ICW2_PORT, al
+
+	call Delay
+
+	mov al, 00000100B			; 从片级联至IR2引脚
+	out MASTER_ICW3_PORT, al
+
+	call Delay
+
+	mov al, 00010001B			; 特殊全嵌套，非缓冲数据连接，手动结束中断
+	out MASTER_ICW4_PORT, al
+
+	call Delay
+
+	; slave
+	; ICW1
+	mov al, 00010001B			; 边沿触发中断，多片级联
+	out SLAVE_ICW1_PORT, al
+
+	call Delay
+
+	mov al, 0x28				; IRO 中断向量为0x28
+	out SLAVE_ICW2_PORT, al
+
+	call Delay
+
+	mov al, 00000010B			; 级联至主片IR2引脚
+	out SLAVE_ICW3_PORT, al
+
+	call Delay
+
+	mov al, 00000001B			; 普通全嵌套，非缓冲数据连接，手动结束中断
+	out SLAVE_ICW4_PORT, al
+
+	call Delay
+
+	pop ax
+	ret
+
+; al --> IMR register value
+; dx --> 8259A port
+WriteIMR:
+	out dx, al
+	call Delay
+	ret
+
+; dx --> 8259A
+; return:
+;     ax --> IMR register value
+ReadIMR:
+	in ax, dx
+	call Delay
+	ret
+
+;
+; dx --> 8259A port
+WriteEOI:
+	push ax
+
+	; 结束正在处理的中断
+	mov al, 0x20
+	out dx, al
+
+	call Delay
+
+	pop ax
+
+	ret
+
 
 [section .gfunc]
 [bits 32]
@@ -156,6 +283,73 @@ RunTask:
     
     iret
 
+;
+;
+InitInterrupt:
+	push ebp
+	mov ebp, esp
+
+	push ax
+	push dx
+
+	call Init8259A
+
+	sti
+
+	mov ax, 0xFF
+	mov dx, MASTER_IMR_PORT
+
+	call WriteIMR
+
+	mov ax, 0xFF
+	mov dx, SLAVE_IMR_PORT
+
+	call WriteIMR 
+
+	pop dx
+	pop ax
+
+	leave
+	ret
+
+;
+;
+EnableTimer:
+	push ebp
+	mov ebp, esp
+
+	push ax
+	push dx
+
+	mov dx, MASTER_IMR_PORT
+
+	call ReadIMR
+
+	and ax, 0xFE
+
+	call WriteIMR
+
+	pop dx
+	pop ax
+
+	leave
+	ret
+
+
+; void SendEOI(uint port);
+;    port ==> 8259A port
+SendEOI:
+	push ebp
+	mov ebp, esp
+
+	mov edx, [ebp + 8]
+
+	mov al, 0x20
+	out dx, al
+
+	leave
+	ret
+
 [section .s32]
 [bits 32]
 CODE32_SEG:
@@ -172,6 +366,13 @@ CODE32_SEG:
 	mov esp, BaseOfLoader
 
 	jmp dword Code32FlatSelector : BaseOfKernel
+
+;
+;
+DefaultHandlerFunc:
+	iret
+
+DefaultHandler equ DefaultHandlerFunc - $$
 	
 Code32SegLen	equ $ - CODE32_SEG
 
