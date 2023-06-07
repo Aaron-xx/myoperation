@@ -2,6 +2,7 @@
 #include "screen.h"
 #include "global.h"
 
+Task* gCTaskAddr = NULL;
 Task p = {0};
 
 void Delay(int n)
@@ -115,6 +116,8 @@ void KMain()
     InitInterrupt();
 
     EnableTimer();
+
+    gCTaskAddr = &p;
     
-    RunTask(&p);
+    RunTask(gCTaskAddr);
 }
