@@ -3,6 +3,7 @@
 
 #include "type.h"
 #include "const.h"
+
 typedef struct {
     ushort limit1;
     ushort base1;
@@ -26,8 +27,8 @@ typedef struct {
 } Gate;
 
 typedef struct {
-    Descriptor * const entry;
-    const int          size;
+    Gate * const entry;
+    const int    size;
 } IdtInfo;
 
 typedef struct {
@@ -76,5 +77,6 @@ typedef struct
 int SetDescValue(Descriptor* pDesc, uint base, uint limit, ushort attr);
 int GetDescValue(Descriptor* pDesc, uint* pBase, uint* pLimit, ushort* pAttr);
 int SetIntHandler(Gate* pGate, uint ifunc);
-int GetIntHandler(Gate* pGate, uint* ifunc);
+int GetIntHandler(Gate* pGate, uint* pIFunc);
+
 #endif

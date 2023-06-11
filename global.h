@@ -4,9 +4,12 @@
 #include "kernel.h"
 #include "const.h"
 
+extern Task* gCTaskAddr;
+
 extern GdtInfo gGdtInfo;
 extern IdtInfo gIdtInfo;
-extern void (* const RunTask)(Task* pt);
+extern void (* const RunTask)(volatile Task* pt);
+extern void (* const LoadTask)(volatile Task* pt);
 
 extern void (* const InitInterrupt)();
 extern void (* const EnableTimer)();

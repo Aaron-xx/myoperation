@@ -13,38 +13,40 @@ extern InitInterrupt
 extern EnableTimer
 extern SendEOI
 extern RunTask
+extern LoadTask
 extern KMain
 extern ClearScreen
 
 %macro BeginISR 0
+    nop
     sub esp, 4
-
+    
     pushad
-
+    
     push ds
     push es
     push fs
     push gs
-
+    
     mov dx, ss
     mov ds, dx
     mov es, dx
-
+    
     mov esp, BaseOfLoader
 %endmacro
 
 %macro EndISR 0
     mov esp, [gCTaskAddr]
-
-    pop ds
-    pop es
-    pop fs
+    
     pop gs
-
+    pop fs
+    pop es
+    pop ds
+    
     popad
-
+    
     add esp, 4
-
+    
     iret
 %endmacro
 
@@ -86,6 +88,9 @@ InitGlobal:
 
     mov eax, dword [SendEOIEntry]
     mov [SendEOI], eax
+
+    mov eax, dword [LoadTaskEntry]
+    mov dword [LoadTask], eax
 
     leave
 

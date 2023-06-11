@@ -2,8 +2,37 @@
 #include "screen.h"
 #include "global.h"
 
-Task* gCTaskAddr = NULL;
 Task p = {0};
+Task t = {0};
+TSS gTSS = {0};
+
+void InitTask(Task* pt, void(*entry)())
+{
+    pt->rv.cs = LDT_CODE32_SELECTOR;
+    pt->rv.gs = LDT_VIDEO_SELECTOR;
+    pt->rv.ds = LDT_DATA32_SELECTOR;
+    pt->rv.es = LDT_DATA32_SELECTOR;
+    pt->rv.fs = LDT_DATA32_SELECTOR;
+    pt->rv.ss = LDT_DATA32_SELECTOR;
+    
+    pt->rv.esp = (uint)pt->stack + sizeof(pt->stack);
+    pt->rv.eip = (uint)entry;
+    pt->rv.eflags = 0x3202;
+    
+    gTSS.ss0 = GDT_DATA32_FLAT_SELECTOR;
+    gTSS.esp0 = (uint)&pt->rv + sizeof(pt->rv);
+    gTSS.iomb = sizeof(TSS);
+    
+    SetDescValue(pt->ldt + LDT_VIDEO_INDEX,  0xB8000, 0x07FFF, DA_DRWA + DA_32 + DA_DPL3);
+    SetDescValue(pt->ldt + LDT_CODE32_INDEX, 0x00,    0xFFFFF, DA_C + DA_32 + DA_DPL3);
+    SetDescValue(pt->ldt + LDT_DATA32_INDEX, 0x00,    0xFFFFF, DA_DRW + DA_32 + DA_DPL3);
+    
+    pt->ldtSelector = GDT_TASK_LDT_SELECTOR;
+    pt->tssSelector = GDT_TASK_TSS_SELECTOR;
+    
+    SetDescValue(&gGdtInfo.entry[GDT_TASK_LDT_INDEX], (uint)&pt->ldt, sizeof(pt->ldt)-1, DA_LDT + DA_DPL0);
+    SetDescValue(&gGdtInfo.entry[GDT_TASK_TSS_INDEX], (uint)&gTSS, sizeof(gTSS)-1, DA_386TSS + DA_DPL0);
+}
 
 void Delay(int n)
 {
@@ -11,10 +40,10 @@ void Delay(int n)
     {
         int i = 0;
         int j = 0;
-        
-        for(i=0; i<1000; i++)
+
+        for(i = 0; i < 1000; i++)
         {
-            for(j=0; j<1000; j++)
+            for(j = 0; j < 1000; j++)
             {
                 asm volatile ("nop\n");
             }
@@ -24,27 +53,31 @@ void Delay(int n)
     }
 }
 
+void ChangeTask()
+{
+    gCTaskAddr = (gCTaskAddr == &p) ? &t : &p;
+    
+    gTSS.ss0 = GDT_DATA32_FLAT_SELECTOR;
+    gTSS.esp0 = (uint)&gCTaskAddr->rv.gs + sizeof(RegValue);
+    
+    SetDescValue(&gGdtInfo.entry[GDT_TASK_LDT_INDEX], (uint)&gCTaskAddr->ldt, sizeof(gCTaskAddr->ldt)-1, DA_LDT + DA_DPL0);
+    
+    LoadTask(gCTaskAddr);
+}
+
+void TimerHandlerEntry();
+
 void TimerHandler()
 {
     static uint i = 0;
 
     i = (i + 1) % 10;
 
-    SetPrintPos(0, 13);
-    PrintString("Timer: ");
-
     if(i == 0)
     {
-        static uint j = 0;
-        SetPrintPos(0, 13);
-        PrintString("Timer: ");
-
-        SetPrintPos(8, 13);
-        PrintIntDec(j++);
+        ChangeTask();
     }
     SendEOI(MASTER_EOI_PORT);
-
-    asm volatile ("leave\n""iret\n");
 }
 
 void TaskA()
@@ -60,6 +93,23 @@ void TaskA()
         SetPrintPos(8, 12);
         PrintChar('A' + i);
         i = (i + 1) % 26;
+        Delay(1);
+    }
+}
+
+void TaskB()
+{
+    int i = 0;
+    
+    SetPrintPos(0, 13);
+    
+    PrintString("Task B: ");
+    
+    while(1)
+    {
+        SetPrintPos(8, 13);
+        PrintChar('0' + i);
+        i = (i + 1) % 10;
         Delay(1);
     }
 }
@@ -85,33 +135,11 @@ void KMain()
     PrintIntDec((uint)gIdtInfo.size);
     
     PrintChar('\n');
-    
-    p.rv.cs = LDT_CODE32_SELECTOR;
-    p.rv.gs = LDT_VIDEO_SELECTOR;
-    p.rv.ds = LDT_DATA32_SELECTOR;
-    p.rv.es = LDT_DATA32_SELECTOR;
-    p.rv.fs = LDT_DATA32_SELECTOR;
-    p.rv.ss = LDT_DATA32_SELECTOR;
-    
-    p.rv.esp = (uint)p.stack + sizeof(p.stack);
-    p.rv.eip = (uint)TaskA;
-    p.rv.eflags = 0x3202;
-    
-    p.tss.ss0 = GDT_DATA32_FLAT_SELECTOR;
-    p.tss.esp0 = 0x9000;
-    p.tss.iomb = sizeof(p.tss);
-    
-    SetDescValue(p.ldt + LDT_VIDEO_INDEX,  0xB8000, 0x07FFF, DA_DRWA + DA_32 + DA_DPL3);
-    SetDescValue(p.ldt + LDT_CODE32_INDEX, 0x00,    0xFFFFF, DA_C + DA_32 + DA_DPL3);
-    SetDescValue(p.ldt + LDT_DATA32_INDEX, 0x00,    0xFFFFF, DA_DRW + DA_32 + DA_DPL3);
-    
-    p.ldtSelector = GDT_TASK_LDT_SELECTOR;
-    p.tssSelector = GDT_TASK_TSS_SELECTOR;
-    
-    SetDescValue(&gGdtInfo.entry[GDT_TASK_LDT_INDEX], (uint)&p.ldt, sizeof(p.ldt)-1, DA_LDT + DA_DPL0);
-    SetDescValue(&gGdtInfo.entry[GDT_TASK_TSS_INDEX], (uint)&p.tss, sizeof(p.tss)-1, DA_386TSS + DA_DPL0);
-    
-    SetIntHandler(gIdtInfo.entry + 0x20, (uint)TimerHandler);
+
+    InitTask(&t, TaskB);
+    InitTask(&p, TaskA);
+      
+    SetIntHandler(gIdtInfo.entry + 0x20, (uint)TimerHandlerEntry + 0xB000);
 
     InitInterrupt();
 

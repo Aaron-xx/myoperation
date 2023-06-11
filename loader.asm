@@ -129,6 +129,7 @@ err:
 
 StoreGlobal:
 	mov dword [RunTaskEntry], RunTask
+	mov dword [LoadTaskEntry], LoadTask
 	mov dword [InitInterruptEntry], InitInterrupt
 	mov dword [EnableTimerEntry], EnableTimer
 	mov dword [SendEOIEntry], SendEOI
@@ -283,6 +284,20 @@ RunTask:
     
     iret
 
+; void LoadTask(Task* pt);
+;
+LoadTask:
+	push ebp
+	mov ebp, esp
+
+	mov eax, [ebp + 8]
+
+	lldt word [eax + 200]
+
+	leave
+
+	ret
+
 ;
 ;
 InitInterrupt:
@@ -334,7 +349,6 @@ EnableTimer:
 
 	leave
 	ret
-
 
 ; void SendEOI(uint port);
 ;    port ==> 8259A port
