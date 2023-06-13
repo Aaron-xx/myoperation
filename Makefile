@@ -40,7 +40,9 @@ kernel_src	:= kmain.c      \
 			   task.c       \
 			   interrupt.c  \
 			   ihandler.c	\
-			   global.c
+			   global.c		\
+			   list.c		\
+			   queue.c
 
 boot_out	:= boot
 loader_out	:= loader
