@@ -1,18 +1,20 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#include "kernel.h"
-#include "const.h"
+#include "type.h"
+#include "task.h"
 
-extern Task* gCTaskAddr;
-
-extern GdtInfo gGdtInfo;
-extern IdtInfo gIdtInfo;
-extern void (* const RunTask)(volatile Task* pt);
-extern void (* const LoadTask)(volatile Task* pt);
-
+// ========Interrupt=========
 extern void (* const InitInterrupt)();
 extern void (* const EnableTimer)();
 extern void (* const SendEOI)(uint port);
+
+
+
+// ========Task=========
+extern Task* gCTaskAddr;
+
+extern void (* const RunTask)(volatile Task* pt);
+extern void (* const LoadTask)(volatile Task* pt);
 
 #endif

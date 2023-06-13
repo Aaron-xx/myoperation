@@ -2,14 +2,17 @@ NASM		:= nasm
 NASMFLAGS	:= -f elf
 
 CC			:= gcc
-CFLAGS		:= -m32 -fno-builtin -fno-stack-protector
+CFLAGS		:= -m32 -fno-builtin -fno-stack-protector 
 
 LD			:= ld
 LDFLAGS		:= -m elf_i386
 
+OBJCOPY		:=  objcopy
+OBJCFLAGS	:= --set-start 0xB000
+
 MOUNT		:= mount
 UMOUNT		:= umount
-RM			:= rm
+RM			:= rm -rf
 MKFS		:= mkfs.msdos
 MKDIR		:= mkdir
 CP			:= cp
@@ -30,7 +33,14 @@ boot_src	:= boot.asm
 loader_src	:= loader.asm
 kentry_src	:= kentry.asm
 
-kernel_src	:= kmain.c screen.c kernel.c global.c 
+kernel_src	:= kmain.c      \
+			   screen.c     \
+			   kernel.c     \
+			   utility.c    \
+			   task.c       \
+			   interrupt.c  \
+			   ihandler.c	\
+			   global.c
 
 boot_out	:= boot
 loader_out	:= loader
@@ -49,7 +59,7 @@ deps		:= $(addprefix $(dir_deps)/, $(deps))
 
 .PHONY: all
 
-all: $(mnt) $(img) $(dir_objs) $(dir_bins) $(dir_deps) $(boot_out) $(loader_out) $(kentry_out) $(kernel_out)
+all: $(img) $(dir_objs) $(dir_bins) $(boot_out) $(loader_out) $(kernel_out)
 	@echo "succeed! ==> Aaron.OS"
 
 ifeq ("$(MAKECMDGOALS)", "all")
@@ -60,7 +70,7 @@ ifeq ("$(MAKECMDGOALS)", "")
 -include $(DEPS)
 endif
 
-$(img): 
+$(img): $(mnt)
 	@dd if=/dev/zero of=$@  bs=512 count=2880
 	@$(MKFS) -F 12 -n "Aaron" $@ > /dev/null
 
@@ -78,13 +88,13 @@ $(kentry_out): $(kentry_src) $(common_src)
 	$(NASM) $(NASMFLAGS) $< -o $@
 
 $(kernel_out): $(bin)
-	objcopy --set-start 0xB000 $< -O binary $@
+	$(OBJCOPY) $(OBJCFLAGS) $< -O binary $@
 	@sudo $(MOUNT) -o loop $(img) $(mnt)
 	@sudo $(CP) $@ $(mnt)/$@
 	@sudo $(UMOUNT) $(mnt)
 
 $(bin): $(kentry_out) $(objs)
-	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld.script
+	$(LD) $(LDFLAGS) $^ -o $@ -T ld.script
 
 $(dir_objs)/%.o : %.c
 	$(CC) $(CFLAGS) -o $@ -c $(filter %.c, $^)
@@ -111,4 +121,4 @@ rebuild:
 	$(MAKE) all
 
 clean:
-	$(RM) -rf $(dirs) $(kernel_out) $(boot_out) $(loader_out) $(img) $(mnt) 
+	$(RM) $(dirs) $(kernel_out) $(boot_out) $(loader_out) $(img) $(mnt)
