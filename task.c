@@ -3,13 +3,11 @@
 #include "screen.h"
 #include "global.h"
 
+#define MAX_RUNNING_TASK    16
 
-
-Task p = {0};
-Task t = {0};
-TSS gTSS = {0};
-
-void TimerHandlerEntry();
+static TaskNode gTaskBuff[MAX_RUNNING_TASK] = {0};
+static Queue gRunningTask = {0};
+static TSS gTSS = {0};
 
 void TaskA()
 {
@@ -17,7 +15,7 @@ void TaskA()
     
     SetPrintPos(0, 12);
     
-    PrintString("Task A: ");
+    PrintString(__FUNCTION__);
     
     while(1)
     {
@@ -34,12 +32,46 @@ void TaskB()
     
     SetPrintPos(0, 13);
     
-    PrintString("Task B: ");
+    PrintString(__FUNCTION__);
     
     while(1)
     {
         SetPrintPos(8, 13);
         PrintChar('0' + i);
+        i = (i + 1) % 10;
+        Delay(1);
+    }
+}
+
+void TaskC()
+{
+    int i = 0;
+    
+    SetPrintPos(0, 14);
+    
+    PrintString(__FUNCTION__);
+    
+    while(1)
+    {
+        SetPrintPos(8, 14);
+        PrintChar('a' + i);
+        i = (i + 1) % 26;
+        Delay(1);
+    }
+}
+
+void TaskD()
+{
+    int i = 0;
+    
+    SetPrintPos(0, 15);
+    
+    PrintString(__FUNCTION__);
+    
+    while(1)
+    {
+        SetPrintPos(8, 15);
+        PrintChar('!' + i);
         i = (i + 1) % 10;
         Delay(1);
     }
@@ -58,44 +90,58 @@ void InitTask(Task* pt, void(*entry)())
     pt->rv.eip = (uint)entry;
     pt->rv.eflags = 0x3202;
     
-    gTSS.ss0 = GDT_DATA32_FLAT_SELECTOR;
-    gTSS.esp0 = (uint)&pt->rv + sizeof(pt->rv);
-    gTSS.iomb = sizeof(TSS);
-    
     SetDescValue(pt->ldt + LDT_VIDEO_INDEX,  0xB8000, 0x07FFF, DA_DRWA + DA_32 + DA_DPL3);
     SetDescValue(pt->ldt + LDT_CODE32_INDEX, 0x00,    0xFFFFF, DA_C + DA_32 + DA_DPL3);
     SetDescValue(pt->ldt + LDT_DATA32_INDEX, 0x00,    0xFFFFF, DA_DRW + DA_32 + DA_DPL3);
     
     pt->ldtSelector = GDT_TASK_LDT_SELECTOR;
     pt->tssSelector = GDT_TASK_TSS_SELECTOR;
+
+}
+
+static void PrepareForRun(volatile Task* pt)
+{
+    gTSS.ss0 = GDT_DATA32_FLAT_SELECTOR;
+    gTSS.esp0 = (uint)&pt->rv + sizeof(pt->rv);
+    gTSS.iomb = sizeof(TSS);
     
-    SetDescValue(&gGdtInfo.entry[GDT_TASK_LDT_INDEX], (uint)&pt->ldt, sizeof(pt->ldt)-1, DA_LDT + DA_DPL0);
-    SetDescValue(&gGdtInfo.entry[GDT_TASK_TSS_INDEX], (uint)&gTSS, sizeof(gTSS)-1, DA_386TSS + DA_DPL0);
+    SetDescValue(AddrOff(gGdtInfo.entry, GDT_TASK_LDT_INDEX), (uint)&pt->ldt, sizeof(pt->ldt)-1, DA_LDT + DA_DPL0);
 }
 
 void TaskModInit()
 {
+    SetDescValue(AddrOff(gGdtInfo.entry, GDT_TASK_TSS_INDEX), (uint)&gTSS, sizeof(gTSS)-1, DA_386TSS + DA_DPL0);
 
-    InitTask(&t, TaskB);
-    InitTask(&p, TaskA);
+    InitTask(&((TaskNode*)AddrOff(gTaskBuff, 0))->task, TaskA);
+    InitTask(&((TaskNode*)AddrOff(gTaskBuff, 1))->task, TaskB);
+    InitTask(&((TaskNode*)AddrOff(gTaskBuff, 2))->task, TaskC);
+    InitTask(&((TaskNode*)AddrOff(gTaskBuff, 3))->task, TaskD);
+    
+    Queue_Init(&gRunningTask);
+    
+    Queue_Add(&gRunningTask, (QueueNode*)AddrOff(gTaskBuff, 0));
+    Queue_Add(&gRunningTask, (QueueNode*)AddrOff(gTaskBuff, 1));
+    Queue_Add(&gRunningTask, (QueueNode*)AddrOff(gTaskBuff, 2));
+    Queue_Add(&gRunningTask, (QueueNode*)AddrOff(gTaskBuff, 3));
+
 }
 
 void LaunchTask()
 {
-    gCTaskAddr = &p;
-    PrintIntHex(RunTask);
+    gCTaskAddr = &((TaskNode*)Queue_Front(&gRunningTask))->task;
+
+    PrepareForRun(gCTaskAddr);
     
     RunTask(gCTaskAddr);
 }
 
 void Schedule()
 {
-    gCTaskAddr = (gCTaskAddr == &p) ? &t : &p;
-    
-    gTSS.ss0 = GDT_DATA32_FLAT_SELECTOR;
-    gTSS.esp0 = (uint)&gCTaskAddr->rv.gs + sizeof(RegValue);
-    
-    SetDescValue(&gGdtInfo.entry[GDT_TASK_LDT_INDEX], (uint)&gCTaskAddr->ldt, sizeof(gCTaskAddr->ldt)-1, DA_LDT + DA_DPL0);
+    Queue_Rotate(&gRunningTask);
+
+    gCTaskAddr = &((TaskNode*)Queue_Front(&gRunningTask))->task;
+
+    PrepareForRun(gCTaskAddr);
     
     LoadTask(gCTaskAddr);
 }

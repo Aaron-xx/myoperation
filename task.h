@@ -2,6 +2,7 @@
 #define TASK_H
 
 #include "kernel.h"
+#include "queue.h"
 
 typedef struct {
     uint gs;
@@ -45,6 +46,12 @@ typedef struct
     char       name[8]; 
     byte       stack[512];  // 任务执行使用的栈
 } Task;
+
+typedef struct
+{
+    QueueNode head;
+    Task task;
+} TaskNode;
 
 void TaskModInit();
 void LaunchTask();

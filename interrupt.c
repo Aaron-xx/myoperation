@@ -4,7 +4,6 @@
 #include "screen.h"
 #include "global.h"
 
-
 void IntModInit()
 {
     SetIntHandler(AddrOff(gIdtInfo.entry, 0x20), (uint)TimerHandlerEntry + 0xB000);
@@ -12,7 +11,6 @@ void IntModInit()
     InitInterrupt();
     
     EnableTimer();
-
 }
 
 int SetIntHandler(Gate* pGate, uint ifunc)
