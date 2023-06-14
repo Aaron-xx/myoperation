@@ -42,7 +42,10 @@ typedef struct
     TSS        tss;
     ushort     ldtSelector;
     ushort     tssSelector;
+    void (*tmain)();
     uint       id;
+    ushort     current;
+    ushort     total;
     char       name[8]; 
     byte       stack[512];  // 任务执行使用的栈
 } Task;
@@ -56,5 +59,6 @@ typedef struct
 void TaskModInit();
 void LaunchTask();
 void Schedule();
+void KillTask();
 
 #endif

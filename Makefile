@@ -42,7 +42,8 @@ kernel_src	:= kmain.c      \
 			   ihandler.c	\
 			   global.c		\
 			   list.c		\
-			   queue.c
+			   queue.c		\
+			   app.c
 
 boot_out	:= boot
 loader_out	:= loader

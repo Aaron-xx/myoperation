@@ -3,6 +3,7 @@
 
 #include "const.h"
 #include "utility.h"
+#include "type.h"
 
 typedef struct _ListNode {
     struct _ListNode* next;

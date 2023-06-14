@@ -5,5 +5,6 @@
                              void name()
 
 DeclHandler(TimerHandler);
+DeclHandler(SysCallHandler);
 
 #endif

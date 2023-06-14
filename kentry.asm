@@ -3,8 +3,10 @@
 global _start
 
 global TimerHandlerEntry
+global SysCallHandlerEntry
 
 extern TimerHandler
+extern SysCallHandler
 
 extern gCTaskAddr
 extern gGdtInfo
@@ -18,7 +20,6 @@ extern KMain
 extern ClearScreen
 
 %macro BeginISR 0
-    nop
     sub esp, 4
     
     pushad
@@ -101,4 +102,11 @@ InitGlobal:
 TimerHandlerEntry:
 BeginISR
     call TimerHandler
+EndISR
+
+SysCallHandlerEntry:
+BeginISR
+    push ax
+    call SysCallHandler
+    pop ax
 EndISR

@@ -2,6 +2,7 @@
 #include "interrupt.h"
 #include "screen.h"
 #include "global.h"
+#include "app.h"
 
 void KMain()
 {
@@ -25,9 +26,11 @@ void KMain()
     
     PrintChar('\n');
 
-    IntModInit();
+    AppModInit();
 
     TaskModInit();
+
+    IntModInit();
 
     LaunchTask();
 }

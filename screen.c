@@ -1,5 +1,6 @@
 #include "kernel.h"
 #include "screen.h"
+#include "type.h"
 
 static int  gPosW = 0;
 static int  gPosH = 0;
