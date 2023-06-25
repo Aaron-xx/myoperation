@@ -39,7 +39,6 @@ typedef struct
 {
     RegValue   rv;          // 任务执行状态，即各个寄存器的值
     Descriptor ldt[3];
-    TSS        tss;
     ushort     ldtSelector;
     ushort     tssSelector;
     void (*tmain)();

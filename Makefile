@@ -7,8 +7,12 @@ CFLAGS		:= -m32 -fno-builtin -fno-stack-protector
 LD			:= ld
 LDFLAGS		:= -m elf_i386
 
+
+kernel_addr := 0xB000
+app_addr    := 0x11000
+
 OBJCOPY		:=  objcopy
-OBJCFLAGS	:= --set-start 0xB000
+OBJCFLAGS	:= --set-start
 
 MOUNT		:= mount
 UMOUNT		:= umount
@@ -17,7 +21,6 @@ MKFS		:= mkfs.msdos
 MKDIR		:= mkdir
 CP			:= cp
 
-kernel_addr	:= B000
 img			:= Aaron
 mnt			:= mnt
 
@@ -32,6 +35,7 @@ blfunc_src	:= blfunc.asm
 boot_src	:= boot.asm
 loader_src	:= loader.asm
 kentry_src	:= kentry.asm
+aentry_src  := aentry.asm
 
 kernel_src	:= kmain.c      \
 			   screen.c     \
@@ -42,27 +46,38 @@ kernel_src	:= kmain.c      \
 			   ihandler.c	\
 			   global.c		\
 			   list.c		\
-			   queue.c		\
-			   app.c
+			   queue.c
+
+app_src		:= screen.c     \
+               utility.c    \
+               app.c
 
 boot_out	:= boot
 loader_out	:= loader
 kernel_out	:= kernel
+app_out     := app
 kentry_out	:= $(dir_objs)/kentry.o
+aentry_out  := $(dir_objs)/aentry.o
 
-bin			:= kernel.bin
-bin			:= $(addprefix $(dir_bins)/, $(bin))
+kernel_bin	:= kernel.bin
+kernel_bin	:= $(addprefix $(dir_bins)/, $(kernel_bin))
 
-#srcs		:= $(wildcard *.c)
-srcs		:= $(kernel_src)
-objs		:= $(srcs:.c=.o)
-objs		:= $(addprefix $(dir_objs)/, $(objs))
-deps		:= := $(srcs:.c=.dep)
-deps		:= $(addprefix $(dir_deps)/, $(deps))
+kernel_objs := $(kernel_src:.c=.o)
+kernel_objs := $(addprefix $(dir_objs)/, $(kernel_objs))
+kernel_deps := $(kernel_src:.c=.dep)
+kernel_deps := $(addprefix $(dir_deps)/, $(kernel_deps))
+
+app_bin		:= app.bin
+app_bin		:= $(addprefix $(dir_bins)/, $(app_bin))
+
+app_objs := $(app_src:.c=.o)
+app_objs := $(addprefix $(dir_objs)/, $(app_objs))
+app_deps := $(app_src:.c=.dep)
+app_deps := $(addprefix $(dir_deps)/, $(app_deps))
 
 .PHONY: all
 
-all: $(img) $(dir_objs) $(dir_bins) $(boot_out) $(loader_out) $(kernel_out)
+all: $(img) $(dir_objs) $(dir_bins) $(boot_out) $(loader_out) $(kernel_out) $(app_out)
 	@echo "succeed! ==> Aaron.OS"
 
 ifeq ("$(MAKECMDGOALS)", "all")
@@ -74,30 +89,42 @@ ifeq ("$(MAKECMDGOALS)", "")
 endif
 
 $(img): $(mnt)
-	@dd if=/dev/zero of=$@  bs=512 count=2880
-	@$(MKFS) -F 12 -n "Aaron" $@ > /dev/null
+	dd if=/dev/zero of=$@  bs=512 count=2880
+	$(MKFS) -F 12 -n "Aaron" $@ > /dev/null
 
 $(boot_out): $(boot_src) $(blfunc_src)
 	$(NASM) -g $< -o $@
-	@dd if=$@ of=$(img) bs=512 count=1 conv=notrunc
+	dd if=$@ of=$(img) bs=512 count=1 conv=notrunc
 
 $(loader_out): $(loader_src) $(common_src) $(blfunc_src)
-	@$(NASM) $< -o $@
-	@sudo $(MOUNT) -o loop $(img) $(mnt)
-	@sudo $(CP) $@ $(mnt)/$@
-	@sudo $(UMOUNT) $(mnt)
+	$(NASM) $< -o $@
+	sudo $(MOUNT) -o loop $(img) $(mnt)
+	sudo $(CP) $@ $(mnt)/$@
+	sudo $(UMOUNT) $(mnt)
 
 $(kentry_out): $(kentry_src) $(common_src)
 	$(NASM) $(NASMFLAGS) $< -o $@
 
-$(kernel_out): $(bin)
-	$(OBJCOPY) $(OBJCFLAGS) $< -O binary $@
-	@sudo $(MOUNT) -o loop $(img) $(mnt)
-	@sudo $(CP) $@ $(mnt)/$@
-	@sudo $(UMOUNT) $(mnt)
+$(kernel_out): $(kernel_bin)
+	$(OBJCOPY) $(OBJCFLAGS) $(kernel_addr) $< -O binary $@
+	sudo $(MOUNT) -o loop $(img) $(mnt)
+	sudo $(CP) $@ $(mnt)/$@
+	sudo $(UMOUNT) $(mnt)
 
-$(bin): $(kentry_out) $(objs)
-	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld.script
+$(kernel_bin): $(kentry_out) $(kernel_objs)
+	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld_kernel.script
+
+$(aentry_out) : $(aentry_src) $(common_src)
+	$(NASM) $(NASMFLAGS) $< -o $@
+
+$(app_out): $(app_bin)
+	$(OBJCOPY) $(OBJCFLAGS) $(app_addr) $< -O binary $@
+	sudo $(MOUNT) -o loop $(img) $(mnt)
+	sudo $(CP) $@ $(mnt)/$@
+	sudo $(UMOUNT) $(mnt)
+
+$(app_bin): $(aentry_out) $(app_objs)
+	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld_app.script
 
 $(dir_objs)/%.o : %.c
 	$(CC) $(CFLAGS) -o $@ -c $(filter %.c, $^)
@@ -124,4 +151,4 @@ rebuild:
 	$(MAKE) all
 
 clean:
-	$(RM) $(dirs) $(kernel_out) $(boot_out) $(loader_out) $(img) $(mnt)
+	$(RM) $(dirs) $(kernel_out) $(boot_out) $(loader_out) $(img) $(mnt) $(app_out)

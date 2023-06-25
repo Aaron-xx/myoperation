@@ -3,11 +3,12 @@
 
 org BaseOfLoader
 
-interface:
 	BaseOfStack		equ		BaseOfLoader
-	BaseOfTarget	equ		BaseOfKernel
-	tarStr	db "KERNEL     "
-	tarLen	equ ($-tarStr)
+
+Kernel db  "KERNEL     "
+KnlLen equ ($-Kernel)
+App    db  "APP        "
+AppLen equ ($-App)
 
 [section .gdt]
 ; GDT definition
@@ -52,8 +53,7 @@ IdtPtr:
 	dw    IdtLen - 1
 	dd    0
 
-	
-TopOfStack16    equ 0x7c00
+; end of [section .idt]
 
 [section .s16]
 [bits 16]
@@ -77,16 +77,44 @@ BLMain:
 	add eax, GDT_ENTRY
 	mov dword [GdtPtr + 2], eax
 
+    ; initialize IDT pointer struct
 	mov eax, 0
 	mov ax, ds
 	shl eax, 4
 	add eax, IDT_ENTRY
 	mov dword [IdtPtr + 2], eax
 
+	; load app
+	push word Buffer
+	push word BaseOfApp / 0x10
+	push word BaseOfApp
+	push word AppLen
+	push word App
+
 	call LoadTarget
 
+	add sp, 10
+
 	cmp dx, 0
-	jz err
+	jz AppErr
+
+    ; restore es register
+    mov ax, cs
+    mov es, ax
+    
+    ; load kernel
+    push word Buffer
+    push word BaseOfKernel / 0x10
+    push word BaseOfKernel
+    push word KnlLen
+    push word Kernel
+    
+	call LoadTarget
+
+    add sp, 10
+    
+	cmp dx, 0
+    jz KernelErr
 
 	call StoreGlobal
 	
@@ -120,12 +148,22 @@ BLMain:
 	; 5.jump to 32 bits code 
 	jmp dword Code32Selector : 0
 	
-err:
-	mov bp, errStr
-	mov cx, errLen
-	call Print
+AppErr:    
+    mov bp, noApp
+    mov cx, NALen
+    jmp output
+KernelErr:
+    mov bp, noKernel
+    mov cx, NKLen
+output:
+    mov ax, cs
+    mov es, ax
+    mov dx, 0
+    mov ax, 0x1301
+    mov bx, 0x0007
+    int 0x10
 
-	jmp  $
+    jmp $
 
 StoreGlobal:
 	mov dword [RunTaskEntry], RunTask
@@ -270,8 +308,8 @@ RunTask:
     
     mov esp, [ebp + 8]
     
-    lldt word [esp + 200]
-    ltr word [esp + 202]
+    lldt word [esp + 96]
+    ltr word [esp + 98]
     
     pop gs
     pop fs
@@ -282,6 +320,22 @@ RunTask:
     
     add esp, 4
     
+    mov dx, MASTER_IMR_PORT
+    
+    in ax, dx
+    
+    %rep 5
+    nop
+    %endrep
+    
+    and ax, 0xFE
+    
+    out dx, al
+
+    mov eax, cr0
+    or  eax, 0x80000000
+    mov cr0, eax
+
     iret
 
 ; void LoadTask(Task* pt);
@@ -292,7 +346,7 @@ LoadTask:
 
 	mov eax, [ebp + 8]
 
-	lldt word [eax + 200]
+	lldt word [eax + 96]
 
 	leave
 
@@ -390,7 +444,9 @@ DefaultHandler equ DefaultHandlerFunc - $$
 	
 Code32SegLen	equ $ - CODE32_SEG
 
-errStr db  "NO KERNEL"	
-errLen equ ($-errStr)
+noKernel db  "NO KERNEL"	
+NKLen    equ ($-noKernel)
+noApp    db  "NO APP"    
+NALen    equ ($-noApp)
 
 Buffer db  0

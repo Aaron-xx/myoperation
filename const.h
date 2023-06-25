@@ -1,6 +1,13 @@
 #ifndef CONST_H
 #define CONST_H
 
+#define BaseOfKernel    0xB000
+#define BaseOfApp       0x12000
+
+#define BaseOfSharedMemory 0xA000
+#define GetAppToRunEntry   (BaseOfSharedMemory + 36)
+#define GetAppNumEntry     (BaseOfSharedMemory + 40)
+
 #define	DA_DPL0			0x00
 #define	DA_DPL1			0x20
 #define	DA_DPL2			0x40

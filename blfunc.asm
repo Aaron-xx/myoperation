@@ -35,18 +35,25 @@ header:
 _start:
     jmp BLMain
 
+; unshort LoadTarget( char*   Target,      notice ==> sizeof(char*) == 2
+;                     unshort TarLen,
+;                     unshort BaseOfTarget,
+;                     unshort BOT_Div_0x10,
+;                     char*   Buffer );
 ; return:
 ;     dx --> (dx != 0) ? success : failure
 LoadTarget:
+	mov bp, sp
+
 	mov ax, RootEntryOffset
 	mov cx, RootEntryLength
-	mov bx, Buffer
+	mov bx, [bp + 10] ; mov bx, Buffer
 	
 	; 将根目录的文件内容复制到Buf处
 	call ReadSector
 	
-	mov si, tarStr
-	mov cx, tarLen
+	mov si, [bp + 2] ; mov si, Target
+	mov cx, [bp + 4] ; mov cx, TarLen
 	mov dx, 0
 	
 	; 从Buf处的根目录文件中寻找要加载的程序
@@ -63,11 +70,12 @@ LoadTarget:
 	call MemCpy
 	
 	; 设置Fat表的起始地址
+	mov bp, sp
 	mov ax, FatEntryLength
 	mov cx, [BPB_BytsPerSec]
 	mul cx
-	mov bx, BaseOfTarget
-	sub bx, cx
+	mov bx, [bp + 6] ; mov bx, BaseOfTarget
+	sub bx, ax
 	
 	mov ax, FatEntryOffset
 	mov cx, FatEntryLength
@@ -76,9 +84,9 @@ LoadTarget:
 	call ReadSector
 	
 	mov dx, [EntryItem + 0x1A]
-	mov si, BaseOfTarget / 0x10
-	mov es, si
-	mov si, 0
+	mov es, [bp + 8] ; mov si, BaseOfTarget / 0x10
+                     ; mov es, si
+	xor si, si
 
 ; tip:
 ; dx == fat index
@@ -121,23 +129,20 @@ finish:
 ; return:
 ;     dx --> fat[index]
 FatVec:
+	push cx
 	;下面的操作在计算目前的实际的fat表地址，即 给定的索引 * 3 / 2
 	mov ax, cx
-	mov cl, 2
-	div cl
+	shr ax, 1
 	
-	push ax
-	
-	mov ah, 0
-	mov cl, 3
-	mul cl
+	mov cx, 3
+	mul cx
 	mov cx, ax
-	
+
 	pop ax
-	
+
 	;ax里面的放的是之前除以2后的结果，
 	;因为余数放在ah中,所以这里根据ah的值来判断给的索引的奇偶性
-	cmp ah, 0
+	and ax, 1
 	jz even
 	jmp odd
 	
@@ -191,30 +196,13 @@ odd:	; FatVec[j+1] = (Fat[i+2] << 4) | ( (Fat[i+1] >> 4) & 0x0F );
 return:
 	ret
 
-; no parameter
-ResetSector:
-	push ax
-	push dx
-	
-	; 复位磁盘系统的BIOS中断号
-	mov ah, 0x00
-	; 指定要复位的软盘驱动器的驱动器号
-	mov dl, [BS_DrvNum]
-	; 调用BIOS 0x13中断，执行ah中值的操作，此时为重置磁盘系统
-	int 0x13
-	
-	pop dx
-	pop ax
-	
-	ret
-
 ; ax	==> logic sector num
 ; cx	==> number of sector
 ; es:bx	==> target address
 ReadSector:
-	push bx
-	
-	call ResetSector
+    mov ah, 0x00
+    mov dl, [BS_DrvNum]
+    int 0x13
 	
 	push bx
 	push cx
@@ -252,8 +240,7 @@ read:
 	; 将数据读取到es:bx ==> Buf
 	; 如果读取出错跳转到read重新读取
 	jc read
-	
-	pop bx
+
 	ret
 
 ; ds:si --> source
@@ -305,8 +292,6 @@ cpdone:
 ; return:
 ;        (cx == 0) ? equal : noequal
 MemCmp:
-	push si
-	push di
 	
 compare:
 	; 若cx为0,则相等，因为目标字符串自定的，那么它的长度cx是已知的
@@ -327,8 +312,6 @@ goon:
 	
 equal:
 unequal:
-	pop di
-	pop si
 	
 	ret
 
@@ -355,7 +338,9 @@ find:
 	mov di, bx
 	; 每次都把栈顶的值给cx,栈顶存放的是之前压入的cx的值
 	mov cx, [bp]
+	push si
 	call MemCmp
+	pop si
 	; cx为memCmp返回值
 	cmp cx, 0
 	jz exist
@@ -367,14 +352,4 @@ find:
 exist:
 noexist:
 	pop cx
-	ret
-	
-; es:bp ==> 字符串地址
-; cx ==> 字符串长度
-Print:
-	; BIOS字符打印
-	mov ax, 0x1301
-	mov bx, 0x0007
-	int 0x10
-
 	ret

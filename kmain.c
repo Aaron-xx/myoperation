@@ -6,6 +6,7 @@
 
 void KMain()
 {
+    void (*AppModInit)() = (void *)BaseOfApp;
 
     PrintString("Aaron.OS\n");
 

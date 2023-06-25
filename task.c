@@ -9,8 +9,8 @@
 #define MAX_READY_TASK      (MAX_TASK_NUM - MAX_RUNNING_TASK)
 #define PID_BASE            0x10
 
-extern AppInfo* GetAppToRun(uint index);
-extern uint GetAppNum();
+static AppInfo* (*GetAppToRun)(uint index) = NULL;
+static uint (*GetAppNum)() = NULL;
 
 static TaskNode gTaskBuff[MAX_TASK_NUM] = {0};
 
@@ -107,8 +107,8 @@ static void CreateTask()
         if(tn)
         {
             AppInfo* app = GetAppToRun(gAppToRunIndex);
-            
             InitTask(&tn->task, gPid++, app->name, app->tmain, app->priority);
+
             
             Queue_Add(&gReadyTask, (QueueNode*)tn);
         }
@@ -140,7 +140,7 @@ static void ReadyToRunning()
 {
     QueueNode* node = NULL;
     
-    if(Queue_Length(&gReadyTask) == 0)
+    if(Queue_Length(&gReadyTask) < MAX_READY_TASK)
     {
         CreateTask();
     }
@@ -173,6 +173,9 @@ void TaskModInit()
 {
     int i = 0;
 
+    GetAppToRun = (void*)(*((uint*)GetAppToRunEntry) + BaseOfApp);
+    GetAppNum = (void*)(*((uint*)GetAppNumEntry) + BaseOfApp);
+
     Queue_Init(&gFreeTaskNode);
     Queue_Init(&gRunningTask);
     Queue_Init(&gReadyTask);
@@ -202,7 +205,9 @@ void LaunchTask()
 }
 
 void Schedule()
-{   
+{
+    RunningToReady();
+    
     ReadyToRunning();
 
     CheckRunningTask();

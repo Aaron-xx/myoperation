@@ -151,23 +151,25 @@ int PrintIntDec(int n)
 }
 int PrintIntHex(unsigned int n)
 {
-    char hex[11] = {'0', 'x', 0};
     int i = 0;
-    for ( i = 9; i >= 2; i--)
+    int ret = 0;
+    
+    ret += PrintChar('0');
+    ret += PrintChar('x');
+    
+    for(i=28; i>=0; i-=4)
     {
-        int p = n & 0xF;
-
-        if (p < 10)
+        int p = (n >> i) & 0xF;
+        
+        if( p < 10 )
         {
-            hex[i] = (p + '0');
+            ret += PrintChar('0' + p);
         }
         else
         {
-            hex[i] = (p - 10 + 'A');
+            ret += PrintChar('A' + p - 10);
         }
-        
-        n >>= 4;
     }
-
-    return PrintString(hex);
+    
+    return ret;
 }

@@ -3,11 +3,10 @@
 
 org BaseOfBoot
 
-interface:
-	BaseOfStack		equ		BaseOfBoot
-	BaseOfTarget	equ		BaseOfLoader
-	tarStr	db "LOADER     "	; loader
-	tarLen	equ ($-tarStr)
+BaseOfStack		equ		BaseOfBoot
+
+Loader db  "LOADER     "
+LdLen  equ ($-Loader)
 
 BLMain:
 	;所有段寄存器都设置为代码段(cs)
@@ -18,18 +17,30 @@ BLMain:
 	mov ss, ax
 	mov sp, SPInitValue
 
+	push word Buffer
+	push word BaseOfLoader / 0x10
+	push word BaseOfLoader
+	push word LdLen
+	push word Loader
+
 	call LoadTarget
 
 	cmp dx, 0
 	jz err
+
 	jmp BaseOfLoader
 	
 err:
+	mov ax, cs
+	mov es, ax
 	mov bp, errStr
 	mov cx, errLen
-	call Print
-
-	jmp  $
+	xor dx, dx
+	mov ax, 0x1301
+	mov bx, 0x0007
+	int 0x10
+    
+	jmp $    
 
 
 errStr	db	"NO LOADER..."		; 要打印的字符串
