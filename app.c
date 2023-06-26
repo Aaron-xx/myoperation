@@ -29,7 +29,7 @@ static void RegApp(const char* name, void(*tmain)(), byte pri)
 void AppMain()
 {
     RegApp("Task A", TaskA, 255);
-    // RegApp("Task B", TaskB, 230);
+    RegApp("Task B", TaskB, 230);
     // RegApp("Task C", TaskC, 230);
     // RegApp("Task D", TaskD, 255);
 }
@@ -54,10 +54,15 @@ uint GetAppNum()
 void TaskA()
 {
     int i = 0;
+    uint* p = (uint*)0x50000;
 
     SetPrintPos(0, 12);
 
     PrintString(__FUNCTION__);
+
+    // *p = 1000;
+    
+    // PrintIntDec(*p);
 
     while(i < 5)
     {
@@ -78,7 +83,7 @@ void TaskB()
 
     PrintString(__FUNCTION__);
 
-    while(i < 5)
+    while(1)
     {
         SetPrintPos(8, 13);
         PrintChar('0' + i);

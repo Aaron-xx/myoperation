@@ -6,14 +6,12 @@
 
 void IntModInit()
 {
-    // SetIntHandler(AddrOff(gIdtInfo.entry, 0x0D), (uint)SegmentFaultHandlerEntry);
-    // SetIntHandler(AddrOff(gIdtInfo.entry, 0x0E), (uint)PageFaultHandlerEntry);
+    SetIntHandler(AddrOff(gIdtInfo.entry, 0x0D), (uint)SegmentFaultHandlerEntry + BaseOfKernel);
+    SetIntHandler(AddrOff(gIdtInfo.entry, 0x0E), (uint)PageFaultHandlerEntry + BaseOfKernel);
     SetIntHandler(AddrOff(gIdtInfo.entry, 0x20), (uint)TimerHandlerEntry + BaseOfKernel);
     SetIntHandler(AddrOff(gIdtInfo.entry, 0x80), (uint)SysCallHandlerEntry + BaseOfKernel);
 
     InitInterrupt();
-
-    EnableTimer();
 }
 
 int SetIntHandler(Gate* pGate, uint ifunc)

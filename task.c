@@ -79,8 +79,8 @@ void InitTask(Task* pt, uint id,const char* name, void(*entry)(), ushort pri)
     StrCpy(pt->name, name, sizeof(pt->name) - 1);
 
     SetDescValue(pt->ldt + LDT_VIDEO_INDEX,  0xB8000, 0x07FFF, DA_DRWA + DA_32 + DA_DPL3);
-    SetDescValue(pt->ldt + LDT_CODE32_INDEX, 0x00,    0xFFFFF, DA_C + DA_32 + DA_DPL3);
-    SetDescValue(pt->ldt + LDT_DATA32_INDEX, 0x00,    0xFFFFF, DA_DRW + DA_32 + DA_DPL3);
+    SetDescValue(pt->ldt + LDT_CODE32_INDEX, 0x00,    0x4FFFF, DA_C + DA_32 + DA_DPL3);
+    SetDescValue(pt->ldt + LDT_DATA32_INDEX, 0x00,    0x4FFFF, DA_DRW + DA_32 + DA_DPL3);
 
     pt->ldtSelector = GDT_TASK_LDT_SELECTOR;
     pt->tssSelector = GDT_TASK_TSS_SELECTOR;
@@ -196,18 +196,18 @@ void TaskModInit()
     SetDescValue(AddrOff(gGdtInfo.entry, GDT_TASK_TSS_INDEX), (uint)&gTSS, sizeof(gTSS)-1, DA_386TSS + DA_DPL0);
 
     InitTask(&gIdleTask->task,0 ,"IdleTask", IdleTask, 255);
-    
+
     ReadyToRunning();
-    
+
     CheckRunningTask();
 }
 
 void LaunchTask()
 {
     gCTaskAddr = &((TaskNode*)Queue_Front(&gRunningTask))->task;
-    
+
     PrepareForRun(gCTaskAddr);
-    
+
     RunTask(gCTaskAddr);
 }
 

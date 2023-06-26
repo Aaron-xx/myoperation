@@ -1,6 +1,7 @@
 #include "interrupt.h"
 #include "task.h"
 #include "global.h"
+#include "screen.h"
 
 void TimerHandler()
 {
@@ -22,4 +23,24 @@ void SysCallHandler(ushort ax)
     {
         KillTask();
     }
+}
+
+void PageFaultHandler()
+{
+    SetPrintPos(0, 6);
+
+    PrintString("Page Fault: kill ");
+    PrintString(gCTaskAddr->name);
+    
+    KillTask();
+}
+
+void SegmentFaultHandler()
+{
+    SetPrintPos(0, 6);
+
+    PrintString("Segment Fault: kill ");
+    PrintString(gCTaskAddr->name);
+
+    KillTask();
 }

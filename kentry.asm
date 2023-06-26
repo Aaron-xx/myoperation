@@ -4,9 +4,13 @@ global _start
 
 global TimerHandlerEntry
 global SysCallHandlerEntry
+global PageFaultHandlerEntry
+global SegmentFaultHandlerEntry
 
 extern TimerHandler
 extern SysCallHandler
+extern PageFaultHandler
+extern SegmentFaultHandler
 
 extern gCTaskAddr
 extern gGdtInfo
@@ -19,7 +23,26 @@ extern LoadTask
 extern KMain
 extern ClearScreen
 
+%macro BeginFSR 0
+    cli
+
+    pushad
+
+    push ds
+    push es
+    push fs
+    push gs
+
+    mov dx, ss
+    mov ds, dx
+    mov es, dx
+
+    mov esp, BaseOfLoader
+%endmacro
+
 %macro BeginISR 0
+    cli
+
     sub esp, 4
     
     pushad
@@ -111,4 +134,18 @@ BeginISR
     push ax
     call SysCallHandler
     pop ax
+EndISR
+
+;
+;
+PageFaultHandlerEntry:
+BeginFSR
+    call PageFaultHandler
+EndISR
+
+;
+;
+SegmentFaultHandlerEntry:
+BeginFSR
+    call SegmentFaultHandler
 EndISR
