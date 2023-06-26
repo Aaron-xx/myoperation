@@ -2,7 +2,6 @@
 #include "app.h"
 #include "utility.h"
 #include "screen.h"
-#include "global.h"
 
 #define MAX_APP_NUM    16
 
@@ -30,15 +29,15 @@ static void RegApp(const char* name, void(*tmain)(), byte pri)
 void AppMain()
 {
     RegApp("Task A", TaskA, 255);
-    RegApp("Task B", TaskB, 230);
-    RegApp("Task C", TaskC, 230);
-    RegApp("Task D", TaskD, 255);
+    // RegApp("Task B", TaskB, 230);
+    // RegApp("Task C", TaskC, 230);
+    // RegApp("Task D", TaskD, 255);
 }
 
 AppInfo* GetAppToRun(uint index)
 {
     AppInfo* ret = NULL;
-    
+
     if( index < MAX_APP_NUM )
     {
         ret = AddrOff(gAppToRun, index);
@@ -52,15 +51,14 @@ uint GetAppNum()
     return gAppNum;
 }
 
-
 void TaskA()
 {
     int i = 0;
-    
+
     SetPrintPos(0, 12);
-    
+
     PrintString(__FUNCTION__);
-    
+
     while(i < 5)
     {
         SetPrintPos(8, 12);
@@ -68,18 +66,18 @@ void TaskA()
         i = (i + 1) % 26;
         Delay(1);
     }
-    
+
     SetPrintPos(8, 12);
 }
 
 void TaskB()
 {
     int i = 0;
-    
+
     SetPrintPos(0, 13);
-    
+
     PrintString(__FUNCTION__);
-    
+
     while(i < 5)
     {
         SetPrintPos(8, 13);
@@ -92,11 +90,11 @@ void TaskB()
 void TaskC()
 {
     int i = 0;
-    
+
     SetPrintPos(0, 14);
-    
+
     PrintString(__FUNCTION__);
-    
+
     while(1)
     {
         SetPrintPos(8, 14);
@@ -109,11 +107,11 @@ void TaskC()
 void TaskD()
 {
     int i = 0;
-    
+
     SetPrintPos(0, 15);
-    
+
     PrintString(__FUNCTION__);
-    
+
     while(1)
     {
         SetPrintPos(8, 15);

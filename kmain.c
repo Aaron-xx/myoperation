@@ -13,18 +13,18 @@ void KMain()
     PrintString("GDT Entry: ");
     PrintIntHex((uint)gGdtInfo.entry);
     PrintChar('\n');
-    
+
     PrintString("GDT Size: ");
     PrintIntDec((uint)gGdtInfo.size);
     PrintChar('\n');
-    
+
     PrintString("IDT Entry: ");
     PrintIntHex((uint)gIdtInfo.entry);
     PrintChar('\n');
-    
+
     PrintString("IDT Size: ");
     PrintIntDec((uint)gIdtInfo.size);
-    
+
     PrintChar('\n');
 
     AppModInit();
@@ -32,6 +32,8 @@ void KMain()
     TaskModInit();
 
     IntModInit();
+
+    ConfigPageTable();
 
     LaunchTask();
 }

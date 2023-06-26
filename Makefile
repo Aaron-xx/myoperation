@@ -9,7 +9,7 @@ LDFLAGS		:= -m elf_i386
 
 
 kernel_addr := 0xB000
-app_addr    := 0x11000
+app_addr    := 0x12000
 
 OBJCOPY		:=  objcopy
 OBJCFLAGS	:= --set-start

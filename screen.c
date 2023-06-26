@@ -23,6 +23,7 @@ void ClearScreen()
 
     SetPrintPos(0, 0);
 }
+
 int  SetPrintPos(short w, short h)
 {
     int ret = 0;
@@ -55,10 +56,12 @@ int  SetPrintPos(short w, short h)
     }
     return ret;
 }
+
 void SetPrintColor(PrintColor c)
 {
     gColor = c;
 }
+
 int PrintChar(char c)
 {
     int ret = 0;
@@ -105,6 +108,7 @@ int PrintChar(char c)
 
     return ret;
 }
+
 int PrintString(const char* s)
 {
     int ret = 0;
@@ -123,6 +127,7 @@ int PrintString(const char* s)
 
     return ret;
 }
+
 int PrintIntDec(int n)
 {
     int ret = 0;
@@ -149,6 +154,7 @@ int PrintIntDec(int n)
     
     return ret;
 }
+
 int PrintIntHex(unsigned int n)
 {
     int i = 0;

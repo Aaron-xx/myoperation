@@ -3,7 +3,7 @@
 
 org BaseOfLoader
 
-	BaseOfStack		equ		BaseOfLoader
+BaseOfStack		equ		BaseOfLoader
 
 Kernel db  "KERNEL     "
 KnlLen equ ($-Kernel)
@@ -20,6 +20,8 @@ CODE32_FLAT_DESC	:		Descriptor	0, 							0xFFFFF,				DA_C + DA_32 + DA_DPL0
 DATA32_FLAT_DESC	:		Descriptor	0, 							0xFFFFF,				DA_DRW + DA_32 + DA_DPL0
 TASK_LDT_DESC		:		Descriptor	0,							0,						0
 TASK_TSS_DESC		:		Descriptor	0,							0,						0
+PAGE_DIR_DESC		:		Descriptor	PageDirBase,				4095,					DA_DRW + DA_LIMIT_4K + DA_32
+PAGE_TBL_DESC		:		Descriptor	PageTblBase,				1023,					DA_DRW + DA_LIMIT_4K + DA_32
 
 ; GDT end
 
@@ -34,6 +36,8 @@ Code32Selector			equ (0x0001 << 3) + SA_TIG + SA_RPL0
 VideoSelector			equ (0x0002 << 3) + SA_TIG + SA_RPL0
 Code32FlatSelector		equ (0x0003 << 3) + SA_TIG + SA_RPL0
 Data32FlatSelector		equ (0x0004 << 3) + SA_TIG + SA_RPL0
+PageDirSelector			equ (0x0007 << 3) + SA_TIG + SA_RPL0
+PageTblSelector			equ (0x0008 << 3) + SA_TIG + SA_RPL0
 
 ;end of [section .gdt]
 
@@ -63,11 +67,11 @@ BLMain:
 	mov es, ax
 	mov ss, ax
 	mov sp, SPInitValue
-	
+
 	; initialize GDT for 32 bits code segment
 	mov esi, CODE32_SEG
 	mov edi, CODE32_DESC
-	
+
 	call initDescItem
 
 	; initialize GDT pointer struct
@@ -98,29 +102,29 @@ BLMain:
 	cmp dx, 0
 	jz AppErr
 
-    ; restore es register
-    mov ax, cs
-    mov es, ax
+	; restore es register
+	mov ax, cs
+	mov es, ax
     
-    ; load kernel
-    push word Buffer
-    push word BaseOfKernel / 0x10
-    push word BaseOfKernel
-    push word KnlLen
-    push word Kernel
-    
+	; load kernel
+	push word Buffer
+	push word BaseOfKernel / 0x10
+	push word BaseOfKernel
+	push word KnlLen
+	push word Kernel
+
 	call LoadTarget
 
     add sp, 10
-    
-	cmp dx, 0
+
+    cmp dx, 0
     jz KernelErr
 
 	call StoreGlobal
-	
+
 	; 1.load GDT
 	lgdt [GdtPtr]
-	
+
 	; 2.close interrupt
 	; set IOPL to 3
 	cli
@@ -134,17 +138,17 @@ BLMain:
 
 	push eax
 	popf
-	
+
 	; 3.open A20 地址线
 	in al, 0x92
 	or al, 00000010b
 	out 0x92, al
-	
+
 	; 4.enter protect mode 通知cpu进入保护模式
 	mov eax, cr0
 	or eax, 0x01
 	mov cr0, eax
-	
+
 	; 5.jump to 32 bits code 
 	jmp dword Code32Selector : 0
 	
@@ -181,7 +185,7 @@ StoreGlobal:
 	mov dword [IdtEntry], eax
 
 	mov dword [IdtSize], IdtLen / 8
-	
+
 	ret
 
 ; esi --> code segment label
@@ -200,9 +204,9 @@ initDescItem:
 	mov byte [edi + 4], al
 	; 填充24-31基址
 	mov byte [edi + 7], ah
-	
+
 	pop eax
-	
+
 	ret
 
 [section .sfunc]
@@ -297,44 +301,43 @@ WriteEOI:
 
 	ret
 
-
 [section .gfunc]
 [bits 32]
 ;
 ;  parameter  ===> Task* pt
 RunTask:
-    push ebp
-    mov ebp, esp
-    
-    mov esp, [ebp + 8]
-    
-    lldt word [esp + 96]
-    ltr word [esp + 98]
-    
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    
-    popad
-    
-    add esp, 4
-    
-    mov dx, MASTER_IMR_PORT
-    
-    in ax, dx
-    
-    %rep 5
-    nop
-    %endrep
-    
-    and ax, 0xFE
-    
-    out dx, al
+	push ebp
+	mov ebp, esp
 
-    mov eax, cr0
-    or  eax, 0x80000000
-    mov cr0, eax
+	mov esp, [ebp + 8]
+
+	lldt word [esp + 96]
+	ltr word [esp + 98]
+
+	pop gs
+	pop fs
+	pop es
+	pop ds
+
+	popad
+
+	add esp, 4
+
+	mov dx, MASTER_IMR_PORT
+
+	in ax, dx
+
+	%rep 5
+	nop
+	%endrep
+
+	and ax, 0xFE
+
+	out dx, al
+
+	mov eax, cr0
+	or  eax, 0x80000000
+	mov cr0, eax
 
     iret
 
@@ -433,7 +436,51 @@ CODE32_SEG:
 	mov ss, ax
 	mov esp, BaseOfLoader
 
+	call SetupPage
+
 	jmp dword Code32FlatSelector : BaseOfKernel
+
+SetupPage:
+	push eax
+	push ecx
+	push edi
+	push es
+
+	mov ax, PageDirSelector
+	mov es, ax
+	mov ecx, 1024    ;  1K sub page tables
+	mov edi, 0
+	mov eax, PageTblBase | PG_P | PG_USU | PG_RWW
+
+	cld
+
+stdir:
+	stosd
+	add eax, 4096
+	loop stdir
+
+	mov ax, PageTblSelector
+	mov es, ax
+	mov ecx, 1024 * 1024   ; 1M pages
+	mov edi, 0
+	mov eax, PG_P | PG_USU | PG_RWW
+
+	cld
+
+sttbl:
+	stosd
+	add eax, 4096
+	loop sttbl
+
+	mov eax, PageDirBase
+	mov cr3, eax
+
+	pop es
+	pop edi
+	pop ecx
+	pop eax
+
+	ret  
 
 ;
 ;
@@ -441,7 +488,7 @@ DefaultHandlerFunc:
 	iret
 
 DefaultHandler equ DefaultHandlerFunc - $$
-	
+
 Code32SegLen	equ $ - CODE32_SEG
 
 noKernel db  "NO KERNEL"	

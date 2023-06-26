@@ -104,6 +104,8 @@ BeginISR
     call TimerHandler
 EndISR
 
+;
+;
 SysCallHandlerEntry:
 BeginISR
     push ax

@@ -1,3 +1,7 @@
+; Page Base 
+PageDirBase   equ    0x50000
+PageTblBase   equ    0x51000
+
 ; Global Variable
 BaseOfBoot    equ    0x7C00
 BaseOfLoader  equ    0x9000

@@ -1,6 +1,9 @@
 #ifndef CONST_H
 #define CONST_H
 
+#define PageDirBase     0x50000
+#define PageTblBase     0x51000
+
 #define BaseOfKernel    0xB000
 #define BaseOfApp       0x12000
 

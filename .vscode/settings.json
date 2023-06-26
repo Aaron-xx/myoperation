@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "const.h": "c",
+        "kernel.h": "c",
+        "type.h": "c",
+        "typeinfo": "cpp",
+        "task.h": "c",
+        "ihandler.h": "c",
+        "interrupt.h": "c",
+        "screen.h": "c",
+        "LIST.C": "cpp",
+        "app.h": "c"
+    }
+}
