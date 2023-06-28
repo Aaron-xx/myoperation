@@ -1,4 +1,3 @@
-
 #include "app.h"
 #include "utility.h"
 #include "screen.h"

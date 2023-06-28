@@ -7,13 +7,13 @@
 #define MAX_TASK_NUM        4
 #define MAX_RUNNING_TASK    2
 #define MAX_READY_TASK      (MAX_TASK_NUM - MAX_RUNNING_TASK)
+#define MAX_TASK_BUFF_NUM   (MAX_TASK_NUM + 1)
 #define PID_BASE            0x10
 
 static AppInfo* (*GetAppToRun)(uint index) = NULL;
 static uint (*GetAppNum)() = NULL;
 
-// static TaskNode gTaskBuff[MAX_TASK_NUM] = {0};
-static TaskNode* gTaskBuff = NULL;
+static TaskNode gTaskBuff[MAX_TASK_BUFF_NUM] = {0};
 
 static Queue gFreeTaskNode = {0};
 static Queue gReadyTask = {0};
@@ -175,8 +175,14 @@ static void RunningToReady()
 void TaskModInit()
 {
     int i = 0;
-
-    gTaskBuff = (void*)0x40000;
+    byte* pStack = (byte*)(PageDirBase - (AppStackSize * MAX_TASK_BUFF_NUM));
+    
+    for(i=0; i<MAX_TASK_BUFF_NUM; i++)
+    {
+        TaskNode* tn = (void*)AddrOff(gTaskBuff, i);
+        
+        tn->task.stack = (void*)AddrOff(pStack, i * AppStackSize);
+    }
     
     gIdleTask = (void*)AddrOff(gTaskBuff, MAX_TASK_NUM);
 
