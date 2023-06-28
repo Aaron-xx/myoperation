@@ -9,6 +9,7 @@
 #define MAX_READY_TASK      (MAX_TASK_NUM - MAX_RUNNING_TASK)
 #define MAX_TASK_BUFF_NUM   (MAX_TASK_NUM + 1)
 #define PID_BASE            0x10
+#define MAX_TIME_SLICE      260
 
 static AppInfo* (*GetAppToRun)(uint index) = NULL;
 static uint (*GetAppNum)() = NULL;
@@ -43,19 +44,7 @@ static void TaskEntry()
 
 static void IdleTask()
 {
-    int i = 0;
-
-    SetPrintPos(0, 10);
-
-    PrintString(__FUNCTION__);
-
-    while( 1 )
-    {
-        SetPrintPos(10, 10);
-        PrintChar('A' + i);
-        i = (i + 1) % 26;
-        Delay(1);
-    }
+    while (1);
 }
 
 void InitTask(Task* pt, uint id,const char* name, void(*entry)(), ushort pri)
@@ -74,7 +63,7 @@ void InitTask(Task* pt, uint id,const char* name, void(*entry)(), ushort pri)
     pt->tmain = entry;
     pt->id = id;
     pt->current = 0;
-    pt->total = 256 - pri;
+    pt->total = MAX_TIME_SLICE - pri;
 
     StrCpy(pt->name, name, sizeof(pt->name) - 1);
 
