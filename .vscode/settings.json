@@ -9,6 +9,11 @@
         "interrupt.h": "c",
         "screen.h": "c",
         "LIST.C": "cpp",
-        "app.h": "c"
+        "app.h": "c",
+        "utility.h": "c",
+        "memory.h": "c",
+        "time.h": "c",
+        "random": "c",
+        "list.h": "c"
     }
 }

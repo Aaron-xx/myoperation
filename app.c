@@ -29,8 +29,8 @@ static void RegApp(const char* name, void(*tmain)(), byte pri)
 void AppMain()
 {
     RegApp("Task A", TaskA, 255);
-    RegApp("Task B", TaskB, 255);
-    RegApp("Task C", TaskC, 255);
+    // RegApp("Task B", TaskB, 255);
+    // RegApp("Task C", TaskC, 255);
     // RegApp("Task D", TaskD, 255);
 }
 
@@ -54,20 +54,24 @@ uint GetAppNum()
 void TaskA()
 {
     int i = 0;
+    uint* p = NULL;
 
     SetPrintPos(0, 12);
 
     PrintString(__FUNCTION__);
+    PrintChar('\n');
 
-    while(i < 5)
-    {
-        SetPrintPos(8, 12);
-        PrintChar('A' + i);
-        i = (i + 1) % 26;
-        Delay(1);
-    }
+    p = (uint*)Malloc(sizeof(uint) * 10);
 
-    SetPrintPos(8, 12);
+    PrintIntHex(p);
+    PrintChar('\n');
+
+    *p = 6666;
+
+    PrintIntDec(*p);
+    PrintChar('\n');
+
+    Free(p);
 }
 
 void TaskB()

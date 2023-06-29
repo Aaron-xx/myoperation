@@ -2,7 +2,7 @@
 #include "interrupt.h"
 #include "screen.h"
 #include "global.h"
-#include "app.h"
+#include "memory.h"
 
 void KMain()
 {
@@ -26,6 +26,8 @@ void KMain()
     PrintIntDec((uint)gIdtInfo.size);
 
     PrintChar('\n');
+
+    MemModInit((byte*)KernelHeapBase, HeapSize);
 
     AppModInit();
 
