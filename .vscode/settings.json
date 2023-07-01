@@ -14,6 +14,7 @@
         "memory.h": "c",
         "time.h": "c",
         "random": "c",
-        "list.h": "c"
+        "list.h": "c",
+        "mutex.h": "c"
     }
 }

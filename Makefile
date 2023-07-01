@@ -37,23 +37,26 @@ loader_src	:= loader.asm
 kentry_src	:= kentry.asm
 aentry_src  := aentry.asm
 
-kernel_src	:= kmain.c      \
-			   screen.c     \
-			   kernel.c     \
-			   utility.c    \
-			   task.c       \
-			   interrupt.c  \
+kernel_src	:= kmain.c		\
+			   screen.c		\
+			   kernel.c		\
+			   utility.c	\
+			   task.c		\
+			   interrupt.c	\
 			   ihandler.c	\
 			   global.c		\
 			   list.c		\
 			   queue.c		\
-			   memory.c
+			   memory.c		\
+			   mutex.c
 
-app_src		:= screen.c     \
-               utility.c    \
+app_src		:= screen.c		\
+               utility.c	\
 			   list.c		\
+			   mutex.c		\
 			   queue.c		\
                memory.c		\
+			   syscall.c	\
 			   app.c
 
 boot_out	:= boot

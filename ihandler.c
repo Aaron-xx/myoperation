@@ -2,6 +2,7 @@
 #include "task.h"
 #include "global.h"
 #include "screen.h"
+#include "mutex.h"
 
 void TimerHandler()
 {
@@ -17,11 +18,18 @@ void TimerHandler()
     SendEOI(MASTER_EOI_PORT);
 }
 
-void SysCallHandler(ushort ax)
+void SysCallHandler(uint type, uint cmd, uint param1, uint param2)
 {
-    if(ax == 0)
+    switch(type)
     {
-        KillTask();
+        case 0:
+            KillTask();
+            break;
+        case 1:
+            MutexCallHandler(cmd, param1);
+            break;
+        default:
+            break;
     }
 }
 
