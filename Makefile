@@ -53,7 +53,6 @@ kernel_src	:= kmain.c		\
 app_src		:= screen.c		\
                utility.c	\
 			   list.c		\
-			   mutex.c		\
 			   queue.c		\
                memory.c		\
 			   syscall.c	\

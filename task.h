@@ -55,9 +55,16 @@ typedef struct
     Task task;
 } TaskNode;
 
+enum
+{
+    WAIT,
+    NOTIFY
+};
+
 void TaskModInit();
 void LaunchTask();
 void Schedule();
+void MtxSchedule(uint action);
 void KillTask();
 
 #endif
