@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "screen.h"
 
 void Exit()
 {
@@ -12,9 +13,6 @@ uint CreateMutex()
 {
     volatile uint ret = 0;
     
-    PrintString("&ret = ");
-    PrintIntHex(&ret);
-    
     asm volatile(
         "movl  $1,  %%eax \n"   // type
         "movl  $0,  %%ebx \n"   // cmd
@@ -24,6 +22,9 @@ uint CreateMutex()
         : "r"(&ret)
         : "eax", "ebx", "ecx", "edx"
     );
+
+    PrintString("&ret = ");
+    PrintIntHex(&ret);
 
     return ret;
 }

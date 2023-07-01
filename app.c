@@ -1,6 +1,7 @@
 #include "app.h"
 #include "utility.h"
 #include "screen.h"
+#include "syscall.h"
 
 #define MAX_APP_NUM    16
 
