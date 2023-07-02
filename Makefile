@@ -87,11 +87,13 @@ all: $(img) $(dir_objs) $(dir_bins) $(boot_out) $(loader_out) $(kernel_out) $(ap
 	@echo "succeed! ==> Aaron.OS"
 
 ifeq ("$(MAKECMDGOALS)", "all")
--include $(DEPS)
+-include $(app_deps)
+-include $(kernel_deps)
 endif
 
 ifeq ("$(MAKECMDGOALS)", "")
--include $(DEPS)
+-include $(app_deps)
+-include $(kernel_deps)
 endif
 
 $(img): $(mnt)

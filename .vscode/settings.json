@@ -15,6 +15,7 @@
         "time.h": "c",
         "random": "c",
         "list.h": "c",
-        "mutex.h": "c"
+        "mutex.h": "c",
+        "syscall.h": "c"
     }
 }
