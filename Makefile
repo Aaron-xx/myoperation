@@ -56,6 +56,8 @@ app_src		:= screen.c		\
 			   queue.c		\
                memory.c		\
 			   syscall.c	\
+			   demo1.c      \
+			   demo2.c      \
 			   app.c
 
 boot_out	:= boot

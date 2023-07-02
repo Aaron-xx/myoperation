@@ -17,11 +17,11 @@ void Exit()
     SysCall(0, 0, 0, 0);
 }
 
-uint CreateMutex()
+uint CreateMutex(uint type)
 {
     volatile uint ret = 0;
 
-    SysCall(1, 0, &ret, 0); 
+    SysCall(1, 0, &ret, type); 
 
     return ret;
 }
@@ -34,7 +34,7 @@ void EnterCritical(uint mutex)
     {
         SysCall(1, 1, mutex, &wait);
     }
-    while( wait );
+    while(wait);
 }
 
 void ExitCritical(uint mutex)

@@ -232,11 +232,11 @@ void LaunchTask()
 
 void MtxSchedule(uint action)
 {
-    if( IsEqual(action, NOTIFY) )
+    if(IsEqual(action, NOTIFY))
     {
         WaittingToReady();
     }
-    else if( IsEqual(action, WAIT) )
+    else if(IsEqual(action, WAIT))
     {
         RunningToWaitting();
     
