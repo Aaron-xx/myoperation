@@ -45,7 +45,8 @@ typedef struct
     uint       id;
     ushort     current;
     ushort     total;
-    char       name[8]; 
+    char       name[16];
+    Queue      wait;
     byte*       stack;  // 任务执行使用的栈
 } Task;
 
@@ -64,7 +65,9 @@ enum
 void TaskModInit();
 void LaunchTask();
 void Schedule();
+void TaskCallHandler(uint cmd, uint param1, uint param2);
 void MtxSchedule(uint action);
 void KillTask();
+void WaitTask(const char* name);
 
 #endif

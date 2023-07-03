@@ -50,7 +50,7 @@ int StrCmp(const char* left, const char* right, uint n)
 {
     int ret = 1;
 
-    if( !IsEqual(left, right) )
+    if(!IsEqual(left, right))
     {
         int lLen = StrLen(left);
         int rLen = StrLen(right);
@@ -64,7 +64,7 @@ int StrCmp(const char* left, const char* right, uint n)
         {
             ret = IsEqual(left[i], right[i]);
 
-            if( !ret )
+            if(!ret)
             {
                 break;
             }
