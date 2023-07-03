@@ -1,15 +1,11 @@
 #include "app.h"
 #include "utility.h"
 #include "screen.h"
+
 #include "syscall.h"
 
 #include "demo1.h"
 #include "demo2.h"
-
-#define MAX_APP_NUM    16
-
-static AppInfo gAppToRun[MAX_APP_NUM] = {0};
-static uint gAppNum = 0;
 
 void TaskA();
 void TaskB();
@@ -20,19 +16,9 @@ void CookRice();
 void CookDish();
 void HaveDinner();
 
-static void RegApp(const char* name, void(*tmain)(), byte pri)
-{
-    if( gAppNum < MAX_APP_NUM )
-    {
-        AppInfo* app = AddrOff(gAppToRun, gAppNum);
-        
-        app->name = name;
-        app->tmain = tmain;
-        app->priority = pri;
-        
-        gAppNum++;
-    }
-}
+// static void RegApp(const char* name, void(*tmain)(), byte pri)
+// {
+// }
 
 void AppMain()
 {
@@ -41,26 +27,16 @@ void AppMain()
     // RegApp("Task C", TaskC, 255);
     // RegApp("Task D", TaskD, 255);
 
-    RegApp("CookRice", CookRice, 255);
-    RegApp("CookDish", CookDish, 255);
-    RegApp("HaveDinner", HaveDinner, 255);
-}
+    // RegApp("CookRice", CookRice, 255);
+    // RegApp("CookDish", CookDish, 255);
+    // RegApp("HaveDinner", HaveDinner, 255);
 
-AppInfo* GetAppToRun(uint index)
-{
-    AppInfo* ret = NULL;
-
-    if( index < MAX_APP_NUM )
-    {
-        ret = AddrOff(gAppToRun, index);
-    }
+    // int* p = (int*)0x80000;
     
-    return ret;
-}
-
-uint GetAppNum()
-{
-    return gAppNum;
+    // *p = 0;
+    
+    SetPrintPos(0, 10);
+    PrintString("AppMain() : Hello Aaron.OS!\n");
 }
 
 static uint g_mutex = 0;

@@ -3,6 +3,7 @@
 #include "screen.h"
 #include "queue.h"
 #include "global.h"
+#include "memory.h"
 #include "app.h"
 
 #define MAX_TASK_NUM        4
@@ -12,11 +13,9 @@
 #define PID_BASE            0x10
 #define MAX_TIME_SLICE      260
 
-static AppInfo* (*GetAppToRun)(uint index) = NULL;
-static uint (*GetAppNum)() = NULL;
-
 static TaskNode gTaskBuff[MAX_TASK_BUFF_NUM] = {0};
 
+static Queue gAppToRun = {0};
 static Queue gFreeTaskNode = {0};
 static Queue gReadyTask = {0};
 static Queue gRunningTask = {0};
@@ -39,8 +38,6 @@ static void TaskEntry()
         "movl  $0,  %eax \n"
         "int   $0x80    \n"
     );
-
-    while(1);  // TODO: schedule next task to run
 }
 
 static void IdleTask()
@@ -114,18 +111,18 @@ static void PrepareForRun(volatile Task* pt)
 
 static void CreateTask()
 {
-    uint num = GetAppNum();
-
-    while((gAppToRunIndex < num) && (Queue_Length(&gReadyTask) < MAX_READY_TASK))
+    while((0 < Queue_Length(&gAppToRun)) && (Queue_Length(&gReadyTask) < MAX_READY_TASK))
     {
         TaskNode* tn = (TaskNode*)Queue_Remove(&gFreeTaskNode);
 
         if(tn)
         {
-            AppInfo* app = GetAppToRun(gAppToRunIndex);
-            InitTask(&tn->task, gPid++, app->name, app->tmain, app->priority);
+            AppNode* an = (AppNode*)Queue_Remove(&gAppToRun); 
+            InitTask(&tn->task, gPid++, an->app.name, an->app.tmain, an->app.priority);
 
             Queue_Add(&gReadyTask, (QueueNode*)tn);
+
+            Free(an);
         }
         else
         {
@@ -212,6 +209,20 @@ static void WaittingToReady(Queue* wq)
     }
 }
 
+static void AppMainToRun()
+{
+    AppNode* an = Malloc(sizeof(AppNode));
+
+    if(an)
+    {
+        an->app.name = "AppMain";
+        an->app.tmain = (void*)(*((uint*)AppMainEntry));
+        an->app.priority = 200;
+
+        Queue_Add(&gAppToRun, (QueueNode*)an);
+    }
+}
+
 void TaskModInit()
 {
     int i = 0;
@@ -226,9 +237,7 @@ void TaskModInit()
 
     gIdleTask = (void*)AddrOff(gTaskBuff, MAX_TASK_NUM);
 
-    GetAppToRun = (void*)(*((uint*)GetAppToRunEntry) + BaseOfApp);
-    GetAppNum = (void*)(*((uint*)GetAppNumEntry) + BaseOfApp);
-
+    Queue_Init(&gAppToRun);
     Queue_Init(&gFreeTaskNode);
     Queue_Init(&gRunningTask);
     Queue_Init(&gReadyTask);
@@ -242,6 +251,8 @@ void TaskModInit()
     SetDescValue(AddrOff(gGdtInfo.entry, GDT_TASK_TSS_INDEX), (uint)&gTSS, sizeof(gTSS)-1, DA_386TSS + DA_DPL0);
 
     InitTask(&gIdleTask->task,0 ,"IdleTask", IdleTask, 255);
+
+    AppMainToRun();
 
     ReadyToRunning();
 
