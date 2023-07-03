@@ -1,4 +1,3 @@
-
 #include "mutex.h"
 #include "memory.h"
 #include "screen.h"
@@ -100,7 +99,7 @@ static void SysStrictEnter(Mutex* mutex, uint* wait)
             *wait = 0;
         }
         else
-        {         
+        {
             *wait = 1;
             MtxSchedule(WAIT);
         }

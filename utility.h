@@ -21,7 +21,12 @@
       (type*)((char*)__mptr - OffsetOf(type, member));  \
 })
 
+#define Min(a, b) ((a) < (b) ? (a) : (b))
+#define Max(a, b) ((a) > (b) ? (a) : (b))
+
 void Delay(int n);
 char* StrCpy(char* dst, const char* src, int n);
+int StrLen(const char* s);
+int StrCmp(const char* left, const char* right, uint n);
 
 #endif
