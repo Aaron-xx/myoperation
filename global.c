@@ -1,4 +1,5 @@
 #include "global.h"
+#include "type.h"
 
 Task* gCTaskAddr = NULL;
 

@@ -3,6 +3,8 @@
 #include "screen.h"
 #include "mutex.h"
 
+extern byte ReadPort(ushort port);
+
 void TimerHandler()
 {
     static uint i = 0;
@@ -14,6 +16,16 @@ void TimerHandler()
         Schedule();
     }
 
+    SendEOI(MASTER_EOI_PORT);
+}
+
+void KeyboardHandler()
+{
+    byte kc = ReadPort(0x60);
+    
+    PrintIntHex(kc);
+    PrintChar(' ');
+    
     SendEOI(MASTER_EOI_PORT);
 }
 

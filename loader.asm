@@ -331,7 +331,7 @@ RunTask:
 	nop
 	%endrep
 
-	and ax, 0xFE
+	and ax, 0xFC
 
 	out dx, al
 

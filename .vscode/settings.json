@@ -29,6 +29,7 @@
         "tuple": "c",
         "type_traits": "c",
         "utility": "c",
-        "demo2.h": "c"
+        "demo2.h": "c",
+        "global.h": "c"
     }
 }

@@ -22,9 +22,9 @@ void AppMain()
     // RegApp("Task C", TaskC, 255);
     // RegApp("Task D", TaskD, 255);
 
-    RegApp("CookRice", CookRice, 255);
-    RegApp("CookDish", CookDish, 255);
-    RegApp("HaveDinner", HaveDinner, 255);
+    // RegApp("CookRice", CookRice, 255);
+    // RegApp("CookDish", CookDish, 255);
+    // RegApp("HaveDinner", HaveDinner, 255);
     // RunDemo1();
     // RunDemo2();
 }
