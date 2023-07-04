@@ -48,7 +48,8 @@ kernel_src	:= kmain.c		\
 			   list.c		\
 			   queue.c		\
 			   memory.c		\
-			   mutex.c
+			   mutex.c		\
+			   keyboard.c
 
 app_src		:= screen.c		\
                utility.c	\

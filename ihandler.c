@@ -2,6 +2,7 @@
 #include "global.h"
 #include "screen.h"
 #include "mutex.h"
+#include "keyboard.h"
 
 extern byte ReadPort(ushort port);
 
@@ -21,10 +22,12 @@ void TimerHandler()
 
 void KeyboardHandler()
 {
-    byte kc = ReadPort(0x60);
+    byte sc = ReadPort(0x60);
     
-    PrintIntHex(kc);
+    PrintIntHex(sc);
     PrintChar(' ');
+
+    PutScanCode(sc);
     
     SendEOI(MASTER_EOI_PORT);
 }
