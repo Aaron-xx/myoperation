@@ -20,9 +20,9 @@ static int g_get = NUM;
 static void Store(char c)
 {
     Product* p = Malloc(sizeof(Product));
-
+            
     p->product = c;
-
+            
     List_AddTail(&g_store, (ListNode*)p);
 }
 
@@ -30,11 +30,11 @@ static int Fetch(char type, char* c)
 {
     int ret = 0;
     ListNode* pos = NULL;
-    
+
     List_ForEach(&g_store, pos)
     {
         Product* p = (Product*)pos;
-        
+
         if( type == 'A' )
         {
             ret = ('A' <= p->product) && (p->product <= 'Z');
@@ -43,30 +43,26 @@ static int Fetch(char type, char* c)
         {
             ret = ('a' <= p->product) && (p->product <= 'z');
         }
-        
+
         if( ret )
         {
             *c = p->product; 
-             
+
             List_DelNode(pos);
-                    
+       
             Free(pos);
-            
+
             break;
         }
     }
-    
+
     return ret;
 }
 
-void ProducerA()
+static void ProducerA()
 {
     int next = 0;
     int run = 1;
-
-    g_mutex = CreateMutex(Strict);
-
-    List_Init(&g_store);
 
     SetPrintPos(0, 12);
 
@@ -75,23 +71,23 @@ void ProducerA()
     while(1)
     {
         EnterCritical(g_mutex);
-        
+
         if( run = (g_num < NUM) )
         {
             char p = 'A' + next % 26;
-
+            
             Store(p);
-
+            
             g_num++;
-
+            
             SetPrintPos(12 + next, 12);
             PrintChar(p);
-
+            
             next++;
         }
-        
-        ExitCritical(g_mutex);
 
+        ExitCritical(g_mutex);
+        
         if( run )
             Delay(1);
         else
@@ -99,35 +95,35 @@ void ProducerA()
     }
 }
 
-void ProducerB()
+static void ProducerB()
 {
     int next = 0;
     int run = 1;
-    
+
     SetPrintPos(0, 14);
-    
+
     PrintString(__FUNCTION__);
-    
+
     while(1)
     {
         EnterCritical(g_mutex);
-        
+
         if( run = (g_num < NUM) )
         {
             char p = 'a' + next % 26;
-            
+
             Store(p);
-            
+
             g_num++;
-            
+
             SetPrintPos(12 + next, 14);
             PrintChar(p);
-            
+
             next++;
         }
         
         ExitCritical(g_mutex);
-        
+
         if( run )
             Delay(next % 2 + 1);
         else
@@ -135,19 +131,19 @@ void ProducerB()
     }
 }
 
-void ConsumerA()
+static void ConsumerA()
 {
     int next = 0;
     int run = 1;
-    
+
     SetPrintPos(0, 16);
-    
+
     PrintString(__FUNCTION__);
-    
+
     while(1)
     {
         char p = 0;
-        
+
         EnterCritical(g_mutex);
         
         if( (run = (g_get > 0)) && Fetch('A', &p) )
@@ -157,9 +153,9 @@ void ConsumerA()
             
             g_get--;
         }
-        
+
         ExitCritical(g_mutex);
-        
+
         if( run )
             Delay(next % 2 + 1);
         else
@@ -167,34 +163,66 @@ void ConsumerA()
     }
 }
 
-void ConsumerB()
+static void ConsumerB()
 {
     int next = 0;
     int run = 1;
-    
+
     SetPrintPos(0, 18);
-    
+
     PrintString(__FUNCTION__);
-    
+
     while(1)
     {
         char p = 0;
-        
+
         EnterCritical(g_mutex);
-        
+
         if( (run = (g_get > 0)) && Fetch('B', &p) )
         {
             SetPrintPos(12 + next++, 18);
             PrintChar(p);
-            
+
             g_get--;
         }
-        
+
         ExitCritical(g_mutex);
-        
+
         if( run )
             Delay(2);
         else
             break;
     }
+}
+
+static void Initialize()
+{
+    g_mutex = CreateMutex(Strict);
+
+    List_Init(&g_store);
+}
+
+static void Deinit()
+{
+    Wait("PA");
+    Wait("PB");
+    Wait("CA");
+    Wait("CB");
+    
+    SetPrintPos(0, 20);
+    PrintString(__FUNCTION__);
+
+    DestroyMutex(g_mutex);
+}
+
+void RunDemo1()
+{
+    Initialize();
+
+    RegApp("PA", ProducerA, 255);
+    RegApp("PB", ProducerB, 255);
+    RegApp("CA", ConsumerA, 255);
+    RegApp("CB", ConsumerB, 255);
+
+    RegApp("Deinit", Deinit, 255);
 }

@@ -6,7 +6,7 @@ AppHeapBase    equ    HeapBase - HeapSize
 PageDirBase    equ    HeapBase + HeapSize
 PageTblBase    equ    PageDirBase + 0x1000
 
-; Global Variable
+; Base Definition
 BaseOfBoot    equ    0x7C00
 BaseOfLoader  equ    0x9000
 BaseOfKernel  equ    0xB000

@@ -24,7 +24,7 @@ void ClearScreen()
     SetPrintPos(0, 0);
 }
 
-int  SetPrintPos(short w, short h)
+int  SetPrintPos(byte w, byte h)
 {
     int ret = 0;
 

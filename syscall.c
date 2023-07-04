@@ -1,5 +1,6 @@
 #include "syscall.h"
 #include "screen.h"
+#include "app.h"
 
 #define SysCall(type, cmd, param1, param2)    asm volatile(                                  \
                                                              "movl  $" #type ",  %%eax \n"   \
@@ -9,7 +10,7 @@
                                                              "int   $0x80              \n"   \
                                                              :                               \
                                                              : "r"(param1), "r"(param2)      \
-                                                             : "eax", "ebx", "ecx", "edx"    \  
+                                                             : "eax", "ebx", "ecx", "edx"    \
                                                           )
 
 void Exit()
@@ -22,6 +23,20 @@ void Wait(const char* name)
     if(name)
     {
         SysCall(0, 1, name, 0);
+    }
+}
+
+void RegApp(const char* name, void(*tmain)(), byte pri)
+{
+    if(name && tmain)
+    {
+        AppInfo info = {0};
+
+        info.name = name;
+        info.tmain = tmain;
+        info.priority = pri;
+
+        SysCall(0, 2, &info, 0);
     }
 }
 

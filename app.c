@@ -1,7 +1,6 @@
 #include "app.h"
 #include "utility.h"
 #include "screen.h"
-
 #include "syscall.h"
 
 #include "demo1.h"
@@ -16,10 +15,6 @@ void CookRice();
 void CookDish();
 void HaveDinner();
 
-// static void RegApp(const char* name, void(*tmain)(), byte pri)
-// {
-// }
-
 void AppMain()
 {
     // RegApp("Task A", TaskA, 255);
@@ -27,16 +22,11 @@ void AppMain()
     // RegApp("Task C", TaskC, 255);
     // RegApp("Task D", TaskD, 255);
 
-    // RegApp("CookRice", CookRice, 255);
-    // RegApp("CookDish", CookDish, 255);
-    // RegApp("HaveDinner", HaveDinner, 255);
-
-    // int* p = (int*)0x80000;
-    
-    // *p = 0;
-    
-    SetPrintPos(0, 10);
-    PrintString("AppMain() : Hello Aaron.OS!\n");
+    RegApp("CookRice", CookRice, 255);
+    RegApp("CookDish", CookDish, 255);
+    RegApp("HaveDinner", HaveDinner, 255);
+    // RunDemo1();
+    // RunDemo2();
 }
 
 static uint g_mutex = 0;

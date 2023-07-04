@@ -19,7 +19,7 @@ typedef struct
 
 static List gMList = {0};
 
-Mutex* SysCreateMutex(uint type)
+static Mutex* SysCreateMutex(uint type)
 {
     Mutex* ret = Malloc(sizeof(Mutex));
     
@@ -50,7 +50,7 @@ static uint IsMutexValid(Mutex* mutex)
     return ret;
 }
 
-void SysDestroyMutex(Mutex* mutex, uint* result)
+static void SysDestroyMutex(Mutex* mutex, uint* result)
 {
     if(mutex)
     {
@@ -111,7 +111,7 @@ static void SysStrictEnter(Mutex* mutex, uint* wait)
     }
 }
 
-void SysEnterCritical(Mutex* mutex, uint* wait)
+static void SysEnterCritical(Mutex* mutex, uint* wait)
 {
     if(mutex && IsMutexValid(mutex))
     {

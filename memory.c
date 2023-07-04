@@ -2,10 +2,6 @@
 #include "utility.h"
 #include "list.h"
 
-#include <stdio.h>
-#include <time.h>
-#include <stdlib.h>
-
 #define FM_ALLOC_SIZE    32
 #define FM_NODE_SIZE     sizeof(FMemNode)
 #define VM_HEAD_SIZE     sizeof(VMemHead)
