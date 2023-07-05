@@ -23,9 +23,9 @@ void TimerHandler()
 void KeyboardHandler()
 {
     byte sc = ReadPort(0x60);
-    
-    PrintIntHex(sc);
-    PrintChar(' ');
+
+    // PrintIntHex(sc);
+    // PrintChar(' ');
 
     PutScanCode(sc);
     

@@ -24,6 +24,8 @@
 #define Min(a, b) ((a) < (b) ? (a) : (b))
 #define Max(a, b) ((a) > (b) ? (a) : (b))
 
+#define Dim(a)  (sizeof(a)/sizeof(*(a)))
+
 void Delay(int n);
 char* StrCpy(char* dst, const char* src, uint n);
 int StrLen(const char* s);

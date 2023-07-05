@@ -30,6 +30,7 @@
         "type_traits": "c",
         "utility": "c",
         "demo2.h": "c",
-        "global.h": "c"
+        "global.h": "c",
+        "keyboard.h": "c"
     }
 }
