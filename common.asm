@@ -21,7 +21,6 @@ IdtEntry            equ       BaseOfSharedMemory + 8
 IdtSize             equ       BaseOfSharedMemory + 12
 RunTaskEntry        equ       BaseOfSharedMemory + 16
 InitInterruptEntry  equ       BaseOfSharedMemory + 20
-EnableTimerEntry    equ       BaseOfSharedMemory + 24
 SendEOIEntry        equ       BaseOfSharedMemory + 28
 LoadTaskEntry       equ       BaseOfSharedMemory + 32
 AppMainEntry        equ       BaseOfSharedMemory + 36

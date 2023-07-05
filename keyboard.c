@@ -1,6 +1,16 @@
 #include "keyboard.h"
 #include "utility.h"
 
+#define KB_BUFF_SIZE   8
+typedef struct
+{
+    uint head;
+    uint tail;
+    uint count;
+    uint max;
+    uint buff[KB_BUFF_SIZE];
+} KeyCodeBuff;
+
 typedef struct
 {
     byte ascii1;   // no shift code
@@ -110,8 +120,48 @@ static const KeyCode gKeyMap[] =
 /* 0x5A - ???       */ {  0,        0,        0,         0   },
 /* 0x5B - Left Win  */ {  0,        0,       0x5B,      0x5B },	
 /* 0x5C - Right Win */ {  0,        0,       0x5C,      0x5C },
-/* 0x5D - Apps      */ {  0,        0,       0x5D,      0x5D }
+/* 0x5D - Apps      */ {  0,        0,       0x5D,      0x5D },
+/* 0x5E - Pause     */ {  0,        0,       0x5E,      0x13 }
 };
+
+static KeyCodeBuff gKCBuff = {0};
+
+uint FetchKeyCode()
+{
+    uint ret = 0;
+
+    if( gKCBuff.count > 0 )
+    {
+        uint* p = AddrOff(gKCBuff.buff, gKCBuff.head);
+
+        ret = *p;
+
+        gKCBuff.head = (gKCBuff.head + 1) % gKCBuff.max;
+        gKCBuff.count--;
+    }
+
+    return ret;
+}
+
+static void StoreKeyCode(uint kc)
+{
+    uint* p = NULL;
+
+    if( gKCBuff.count < gKCBuff.max )
+    {
+        p = AddrOff(gKCBuff.buff, gKCBuff.tail);
+
+        *p = kc;
+
+        gKCBuff.tail = (gKCBuff.tail + 1) % gKCBuff.max;
+        gKCBuff.count++;
+    }
+    else if( gKCBuff.count > 0 )
+    {
+        FetchKeyCode();
+        StoreKeyCode(kc);
+    }
+}
 
 static uint KeyType(byte sc)
 {
@@ -142,7 +192,31 @@ static uint IsNumLock(byte sc)
 
 static uint PauseHandler(byte sc)
 {
-    uint ret = 0;
+    static int cPause = 0;
+    uint ret = ( (sc == 0xE1) || cPause );
+
+    if( ret )
+    {
+        static byte cPauseCode[] = {0xE1, 0x1D, 0x45, 0xE1, 0x9D, 0xC5};
+        byte* pcc = AddrOff(cPauseCode, cPause);
+
+        if( sc == *pcc )
+        {
+            cPause++;
+        }
+        else
+        {
+            cPause = 0;
+            ret = 0;
+        }
+
+        if( cPause == Dim(cPauseCode) )
+        {
+            cPause = 0;
+            PutScanCode(0x5E);
+            PutScanCode(0xDE);
+        }
+    }
 
     return ret;
 }
@@ -321,8 +395,7 @@ static uint KeyHandler(byte sc)
 
             code = pressed | MakeCode(pkc, cShift, cCapsLock, cNumLock, E0);
 
-            if( pressed )
-               PrintChar((char)code);
+            StoreKeyCode(code);
 
             E0 = 0;
         }
@@ -347,9 +420,7 @@ void PutScanCode(byte sc)
     }
 }
 
-uint FetchKeyCode()
+void KeyboardModInit()
 {
-    uint ret = 0;
-
-    return ret;
+    gKCBuff.max = 2;
 }

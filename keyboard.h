@@ -4,6 +4,7 @@
 
 #include "type.h"
 
+void KeyboardModInit();
 void PutScanCode(byte sc);
 uint FetchKeyCode();
 

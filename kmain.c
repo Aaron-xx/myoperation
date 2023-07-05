@@ -4,6 +4,7 @@
 #include "global.h"
 #include "memory.h"
 #include "mutex.h"
+#include "keyboard.h"
 
 void KMain()
 {
@@ -29,6 +30,8 @@ void KMain()
     PrintChar('\n');
 
     MemModInit((byte*)KernelHeapBase, HeapSize);
+
+    KeyboardModInit();
 
     MutexModInit();
 
