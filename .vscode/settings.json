@@ -31,6 +31,7 @@
         "utility": "c",
         "demo2.h": "c",
         "global.h": "c",
-        "keyboard.h": "c"
+        "keyboard.h": "c",
+        "event.h": "c"
     }
 }

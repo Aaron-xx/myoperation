@@ -25,6 +25,8 @@ void KeyboardHandler()
     byte sc = ReadPort(0x60);
 
     PutScanCode(sc);
+
+    NotifyKeyCode();
     
     SendEOI(MASTER_EOI_PORT);
 }
@@ -39,6 +41,9 @@ void SysCallHandler(uint type, uint cmd, uint param1, uint param2)
         case 1:
             MutexCallHandler(cmd, param1, param2);
             break;
+        case 2:
+            KeyCallHandler(cmd, param1, param2);
+            break;
         default:
             break;
     }
@@ -49,7 +54,7 @@ void PageFaultHandler()
     SetPrintPos(0, 6);
 
     PrintString("Page Fault: kill ");
-    PrintString(gCTaskAddr->name);
+    PrintString(CurrentTaskName());
     
     KillTask();
 }
@@ -59,7 +64,7 @@ void SegmentFaultHandler()
     SetPrintPos(0, 6);
 
     PrintString("Segment Fault: kill ");
-    PrintString(gCTaskAddr->name);
+    PrintString(CurrentTaskName());
 
     KillTask();
 }

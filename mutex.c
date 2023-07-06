@@ -4,19 +4,6 @@
 #include "task.h"
 #include "global.h"
 
-enum
-{
-    Normal,
-    Strict
-};
-
-typedef struct 
-{
-    ListNode head;
-    uint type;
-    uint lock;
-} Mutex;
-
 static List gMList = {0};
 
 static Mutex* SysCreateMutex(uint type)
@@ -76,12 +63,22 @@ static void SysDestroyMutex(Mutex* mutex, uint* result)
     }
 }
 
+static void DoWait(Mutex* mutex, uint* wait)
+{
+    Event* evt = CreateEvent(MutexEvent, (uint)mutex, 0, 0);
+
+    if( evt )
+    {
+        *wait = 1;
+        EventSchedule(WAIT, evt);
+    }
+}
+
 static void SysNormalEnter(Mutex* mutex, uint* wait)
 {
     if(mutex->lock)
     {
-        *wait = 1;
-        MtxSchedule(WAIT);
+        DoWait(mutex, wait);
     }
     else
     {
@@ -94,19 +91,18 @@ static void SysStrictEnter(Mutex* mutex, uint* wait)
 {
     if(mutex->lock)
     {
-        if( IsEqual(mutex->lock, gCTaskAddr) )
+        if(mutex->lock == CurrentTaskId())
         {
             *wait = 0;
         }
         else
         {
-            *wait = 1;
-            MtxSchedule(WAIT);
+            DoWait(mutex, wait);
         }
     }
     else
     {
-        mutex->lock = (uint)gCTaskAddr;
+        mutex->lock = CurrentTaskId();
         *wait = 0;
     }
 }
@@ -131,16 +127,17 @@ static void SysEnterCritical(Mutex* mutex, uint* wait)
 
 static void SysNormalExit(Mutex* mutex)
 {
+    Event evt = {MutexEvent, (uint)mutex, 0, 0};
+
     mutex->lock = 0;
-    MtxSchedule(NOTIFY);
+    EventSchedule(NOTIFY, &evt);
 }
 
 static void SysStrictExit(Mutex* mutex)
 {
-    if(IsEqual(mutex->lock, gCTaskAddr))
+    if(mutex->lock == CurrentTaskId())
     {
-        mutex->lock = 0;  
-        MtxSchedule(NOTIFY);
+        SysNormalExit(mutex);
     }
     else
     {   
@@ -173,17 +170,17 @@ void MutexModInit()
 
 void MutexCallHandler(uint cmd, uint param1, uint param2)
 {
-    if( cmd == 0 )
+    if(cmd == 0)
     {
         uint* pRet = (uint*)param1;
 
         *pRet = (uint)SysCreateMutex(param2);
     }
-    else if( cmd == 1 )
+    else if(cmd == 1)
     {
         SysEnterCritical((Mutex*)param1, (uint*)param2);
     }
-    else if( cmd == 2 )
+    else if(cmd == 2)
     {
         SysExitCritical((Mutex*)param1);
     }

@@ -3,6 +3,7 @@
 #include "screen.h"
 #include "queue.h"
 #include "memory.h"
+#include "mutex.h"
 #include "global.h"
 #include "app.h"
 
@@ -209,6 +210,10 @@ static void WaittingToReady(Queue* wq)
     {
         TaskNode* tn = (TaskNode*)Queue_Front(wq);
 
+        DestroyEvent(tn->task.event);
+
+        tn->task.event = NULL;
+
         Queue_Remove(wq);
         Queue_Add(&gReadyTask, (QueueNode*)tn);
     }
@@ -295,6 +300,29 @@ void LaunchTask()
     RunTask(gCTaskAddr);
 }
 
+static void WaitEvent(Queue* wait, Event* event)
+{
+    gCTaskAddr->event = event;
+
+    RunningToWaitting(wait);
+
+    ScheduleNext();
+}
+
+static void TaskSchedule(uint action, Event* event)
+{
+    Task* task = (Task*)event->id;
+
+    if(action == NOTIFY)
+    {
+        WaittingToReady(&task->wait);
+    }
+    else if(action == WAIT)
+    {
+        WaitEvent(&task->wait, event);
+    }
+}
+
 void MtxSchedule(uint action)
 {
     if(IsEqual(action, NOTIFY))
@@ -312,6 +340,64 @@ void Schedule()
 {
     RunningToReady();
     ScheduleNext();
+}
+
+static void MutexSchedule(uint action, Event* event)
+{
+    Mutex* mutex = (Mutex*)event->id;
+    
+    if( action == NOTIFY )
+    {
+        WaittingToReady(&mutex->wait);
+    }
+    else if( action == WAIT )
+    {
+        WaitEvent(&mutex->wait, event);
+    }
+}
+
+static void KeySchedule(uint action, Event* event)
+{
+    Queue* wait = (Queue*)event->id;
+
+    if(action == NOTIFY)
+    {
+        uint kc = event->param1;
+        ListNode* pos = NULL;
+
+        List_ForEach((List*)wait, pos)
+        {
+            TaskNode* tn = (TaskNode*)pos;
+            Event* we = tn->task.event;
+            uint* ret = (uint*)we->param1;
+
+            *ret = kc;
+        }
+
+        WaittingToReady(wait);
+    }
+    else if(action == WAIT)
+    {
+        WaitEvent(wait, event);
+    }
+}
+
+void EventSchedule(uint action, Event* event)
+{
+    switch(event->type)
+    {
+        case KeyEvent:
+            KeySchedule(action, event);
+            break;
+        case TaskEvent:
+            TaskSchedule(action, event);
+            break;
+        case MutexEvent:
+            MutexSchedule(action, event);
+            break;
+        default:
+            break;
+    }
 }
 
 void KillTask()
@@ -334,8 +420,12 @@ void WaitTask(const char* name)
 
     if(task)
     {
-        RunningToWaitting(&task->wait);
-        ScheduleNext();
+        Event* evt = CreateEvent(TaskEvent, (uint)task, 0, 0);
+
+        if(evt)
+        {
+            EventSchedule(WAIT, evt);
+        }
     }
 }
 
@@ -355,4 +445,14 @@ void TaskCallHandler(uint cmd, uint param1, uint param2)
         default:
             break;
     }
+}
+
+const char* CurrentTaskName()
+{
+    return gCTaskAddr->name;
+}
+
+uint CurrentTaskId()
+{
+    return gCTaskAddr->id;
 }

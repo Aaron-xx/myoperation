@@ -3,6 +3,7 @@
 
 #include "kernel.h"
 #include "queue.h"
+#include "event.h"
 #include "app.h"
 
 typedef struct {
@@ -48,7 +49,8 @@ typedef struct
     ushort     total;
     char       name[16];
     Queue      wait;
-    byte*       stack;  // 任务执行使用的栈
+    byte*      stack;  // 任务执行使用的栈
+    Event*     event;
 } Task;
 
 typedef struct
@@ -73,8 +75,11 @@ void TaskModInit();
 void LaunchTask();
 void Schedule();
 void TaskCallHandler(uint cmd, uint param1, uint param2);
-void MtxSchedule(uint action);
+void EventSchedule(uint action, Event* event);
 void KillTask();
 void WaitTask(const char* name);
+
+const char* CurrentTaskName();
+uint CurrentTaskId();
 
 #endif

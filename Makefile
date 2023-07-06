@@ -49,7 +49,8 @@ kernel_src	:= kmain.c		\
 			   queue.c		\
 			   memory.c		\
 			   mutex.c		\
-			   keyboard.c
+			   keyboard.c	\
+			   event.c
 
 app_src		:= screen.c		\
                utility.c	\
@@ -59,6 +60,7 @@ app_src		:= screen.c		\
 			   syscall.c	\
 			   demo1.c      \
 			   demo2.c      \
+			   shell.c		\
 			   app.c
 
 boot_out	:= boot

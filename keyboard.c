@@ -1,5 +1,8 @@
 #include "keyboard.h"
 #include "utility.h"
+#include "queue.h"
+#include "event.h"
+#include "task.h"
 
 #define KB_BUFF_SIZE   8
 typedef struct
@@ -125,8 +128,9 @@ static const KeyCode gKeyMap[] =
 };
 
 static KeyCodeBuff gKCBuff = {0};
+static Queue gKeyWait = {0};
 
-uint FetchKeyCode()
+static uint FetchKeyCode()
 {
     uint ret = 0;
 
@@ -420,7 +424,48 @@ void PutScanCode(byte sc)
     }
 }
 
+static void NotifyAll(uint kc)
+{
+    Event evt = {KeyEvent, (uint)&gKeyWait, kc, 0};
+    
+    EventSchedule(NOTIFY, &evt);
+}
+
 void KeyboardModInit()
 {
+    Queue_Init(&gKeyWait);
     gKCBuff.max = 2;
+}
+
+void NotifyKeyCode()
+{
+    uint kc = FetchKeyCode();
+
+    if(kc)
+    {
+        NotifyAll(kc);
+    }
+}
+
+void KeyCallHandler(uint cmd, uint param1, uint param2)
+{
+    if( param1 )
+    {
+        uint kc = FetchKeyCode();
+
+        if(kc)
+        {
+            uint* ret = (uint*)param1;
+
+            *ret = kc;
+
+            NotifyAll(kc);
+        }
+        else
+        {
+            Event* evt = CreateEvent(KeyEvent, (uint)&gKeyWait, param1, 0);
+
+            EventSchedule(WAIT, evt);
+        }
+    }
 }
