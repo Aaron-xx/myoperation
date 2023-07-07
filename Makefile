@@ -125,7 +125,7 @@ $(kernel_out): $(kernel_bin)
 	sudo $(UMOUNT) $(mnt)
 
 $(kernel_bin): $(kentry_out) $(kernel_objs)
-	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld_kernel.script
+	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld.script
 
 $(aentry_out) : $(aentry_src) $(common_src)
 	$(NASM) $(NASMFLAGS) $< -o $@
@@ -137,7 +137,7 @@ $(app_out): $(app_bin)
 	sudo $(UMOUNT) $(mnt)
 
 $(app_bin): $(aentry_out) $(app_objs)
-	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld_app.script
+	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld.script
 
 $(dir_objs)/%.o : %.c
 	$(CC) $(CFLAGS) -o $@ -c $(filter %.c, $^)

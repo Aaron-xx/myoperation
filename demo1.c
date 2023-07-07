@@ -80,7 +80,7 @@ static void ProducerA()
             
             g_num++;
             
-            SetPrintPos(12 + next, 12);
+            SetPrintPos(TASK_START_W + 12 + next, TASK_START_H);
             PrintChar(p);
             
             next++;
@@ -100,7 +100,7 @@ static void ProducerB()
     int next = 0;
     int run = 1;
 
-    SetPrintPos(0, 14);
+    SetPrintPos(TASK_START_W, TASK_START_H + 2);
 
     PrintString(__FUNCTION__);
 
@@ -116,12 +116,12 @@ static void ProducerB()
 
             g_num++;
 
-            SetPrintPos(12 + next, 14);
+            SetPrintPos(TASK_START_W + 12 + next, TASK_START_H + 2);
             PrintChar(p);
 
             next++;
         }
-        
+
         ExitCritical(g_mutex);
 
         if( run )
@@ -136,7 +136,7 @@ static void ConsumerA()
     int next = 0;
     int run = 1;
 
-    SetPrintPos(0, 16);
+    SetPrintPos(TASK_START_W, TASK_START_H + 4);
 
     PrintString(__FUNCTION__);
 
@@ -148,7 +148,7 @@ static void ConsumerA()
         
         if( (run = (g_get > 0)) && Fetch('A', &p) )
         {
-            SetPrintPos(12 + next++, 16);
+            SetPrintPos(TASK_START_W + 12 + next++, TASK_START_H + 4);
             PrintChar(p);
             
             g_get--;
@@ -156,7 +156,7 @@ static void ConsumerA()
 
         ExitCritical(g_mutex);
 
-        if( run )
+        if(run)
             Delay(next % 2 + 1);
         else
             break;
@@ -168,7 +168,7 @@ static void ConsumerB()
     int next = 0;
     int run = 1;
 
-    SetPrintPos(0, 18);
+    SetPrintPos(TASK_START_W, TASK_START_H + 6);
 
     PrintString(__FUNCTION__);
 
@@ -180,7 +180,7 @@ static void ConsumerB()
 
         if( (run = (g_get > 0)) && Fetch('B', &p) )
         {
-            SetPrintPos(12 + next++, 18);
+            SetPrintPos(TASK_START_W + 12 + next++, TASK_START_H + 6);
             PrintChar(p);
 
             g_get--;
@@ -198,6 +198,8 @@ static void ConsumerB()
 static void Initialize()
 {
     g_mutex = CreateMutex(Strict);
+    g_num = 0;
+    g_get = NUM;
 
     List_Init(&g_store);
 }
@@ -209,7 +211,7 @@ static void Deinit()
     Wait("CA");
     Wait("CB");
     
-    SetPrintPos(0, 20);
+    SetPrintPos(TASK_START_W, TASK_START_H + 8);
     PrintString(__FUNCTION__);
 
     DestroyMutex(g_mutex);

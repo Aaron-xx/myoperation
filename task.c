@@ -404,8 +404,9 @@ void KillTask()
 {
     QueueNode* node = Queue_Remove(&gRunningTask);
     Task* task = &((TaskNode*)node)->task;
+    Event evt = {TaskEvent, (uint)task, 0, 0};
 
-    WaittingToReady(&task->wait);
+    EventSchedule(NOTIFY, &evt);
 
     task->id = 0;
 

@@ -427,7 +427,7 @@ void PutScanCode(byte sc)
 static void NotifyAll(uint kc)
 {
     Event evt = {KeyEvent, (uint)&gKeyWait, kc, 0};
-    
+
     EventSchedule(NOTIFY, &evt);
 }
 

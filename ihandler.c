@@ -51,7 +51,7 @@ void SysCallHandler(uint type, uint cmd, uint param1, uint param2)
 
 void PageFaultHandler()
 {
-    SetPrintPos(0, 6);
+    SetPrintPos(ERR_START_W, ERR_START_H);
 
     PrintString("Page Fault: kill ");
     PrintString(CurrentTaskName());
@@ -61,7 +61,7 @@ void PageFaultHandler()
 
 void SegmentFaultHandler()
 {
-    SetPrintPos(0, 6);
+    SetPrintPos(ERR_START_W, ERR_START_H);
 
     PrintString("Segment Fault: kill ");
     PrintString(CurrentTaskName());

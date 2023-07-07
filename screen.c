@@ -6,6 +6,16 @@ static int  gPosW = 0;
 static int  gPosH = 0;
 static char gColor = SCREEN_WHITE;
 
+byte GetPrintPosH()
+{
+    return gPosH;
+}
+
+byte GetPrintPosW()
+{
+    return gPosW;
+}
+
 void ClearScreen()
 {
     int h = 0;
@@ -30,7 +40,7 @@ int  SetPrintPos(byte w, byte h)
 
     if( ret = ((0 <= w) && (w <= SCREEN_WIDTH) && (0 <= h) && (h <= SCREEN_HEIGHT)) )
     {
-        unsigned short bx = SCREEN_WIDTH * h + w;
+        ushort bx = SCREEN_WIDTH * h + w;
 
         gPosW = w;
         gPosH = h;
@@ -72,13 +82,13 @@ int PrintChar(char c)
     }
     else
     {
-        int pw = gPosW;
-        int ph = gPosH;
+        byte pw = gPosW;
+        byte ph = gPosH;
 
         if( (0 <= pw) && (pw <= SCREEN_WIDTH) && (0 <= ph) && (ph <= SCREEN_HEIGHT) )
         {
-            int edi = (SCREEN_WIDTH * ph + pw) * 2;
-            char ah = gColor;
+            uint edi = (SCREEN_WIDTH * ph + pw) * 2;
+            byte ah = gColor;
             char al = c;
 
             asm volatile(

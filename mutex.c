@@ -12,6 +12,8 @@ static Mutex* SysCreateMutex(uint type)
     
     if(ret)
     {
+        Queue_Init(&ret->wait);
+        
         ret->lock = 0;
         ret->type = type;
         List_Add(&gMList, (ListNode*)ret);

@@ -9,6 +9,8 @@ static uint g_mutex_write = 0;
 static uint g_mutex_read = 0;
 static char g_data = 'A';
 static int g_count = 0;
+static int g_rnext = TASK_START_W;
+static int g_rcol = TASK_START_H + 2;
 
 static void Reader()
 {
@@ -31,7 +33,7 @@ static void Reader()
 
         if( run )
         {
-            SetPrintPos(next, col);
+            SetPrintPos(g_rnext, g_rcol);
             PrintChar(g_data);
         }
 
@@ -60,7 +62,7 @@ static void Writer()
 {
     int next = 0;
 
-    SetPrintPos(0, 12);
+    SetPrintPos(TASK_START_W, TASK_START_H);
 
     PrintString(__FUNCTION__);
 
@@ -70,7 +72,7 @@ static void Writer()
 
         g_data++;
 
-        SetPrintPos(12 + next, 12);
+        SetPrintPos(TASK_START_W + 12 + next, TASK_START_H);
         PrintChar(g_data);
 
         ExitCritical(g_mutex_write);
@@ -100,7 +102,7 @@ static void Deinit()
     Wait("ReaderB");
     Wait("ReaderC");
 
-    SetPrintPos(0, 20);
+    SetPrintPos(TASK_START_W, TASK_START_H + 8);
     PrintString(__FUNCTION__);
 
     DestroyMutex(g_mutex_write);
