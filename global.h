@@ -8,10 +8,9 @@
 extern void (* const InitInterrupt)();
 extern void (* const SendEOI)(uint port);
 
-
-
 // ========Task=========
 extern Task* gCTaskAddr;
+extern uint gMemSize;
 
 extern void (* const RunTask)(volatile Task* pt);
 extern void (* const LoadTask)(volatile Task* pt);

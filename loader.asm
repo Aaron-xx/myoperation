@@ -120,6 +120,10 @@ BLMain:
     cmp dx, 0
     jz KernelErr
 
+	;  获取硬盘容量
+	call GetMemSize
+
+	;  为内核存储关键的全局信息
 	call StoreGlobal
 
 	; 1.load GDT
@@ -206,6 +210,37 @@ initDescItem:
 
 	pop eax
 
+	ret
+
+;
+;
+GetMemSize:
+	mov dword [MemSize], 0
+
+	xor eax, eax
+	mov eax, 0xE801
+
+	int 0x15
+
+	jc geterr
+
+	shl eax, 10     ; eax = eax * 1024
+
+	shl ebx, 6 + 10 ; ebx = ebx * 64 * 1024
+
+	mov ecx, 1
+	shl ecx, 20     ; ecx = 1024 * 1024
+
+	add dword [MemSize], eax
+	add dword [MemSize], ebx
+	add dword [MemSize], ecx
+
+	jmp getok
+
+geterr:
+	mov dword [MemSize], 0
+
+getok:    
 	ret
 
 [section .sfunc]

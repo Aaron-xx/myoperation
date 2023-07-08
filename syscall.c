@@ -82,3 +82,12 @@ uint ReadKey()
     
     return ret;
 }
+
+uint GetMemSize()
+{
+    uint ret = 0;
+
+    SysCall(3, 0, &ret, 0);
+
+    return ret;
+}

@@ -6,6 +6,8 @@
 #include "mutex.h"
 #include "keyboard.h"
 
+extern uint gMemSize;
+
 void KMain()
 {
     void (*AppModInit)() = (void *)BaseOfApp;
@@ -28,6 +30,7 @@ void KMain()
     PrintIntDec((uint)gIdtInfo.size);
 
     PrintChar('\n');
+    PrintIntHex(gMemSize);
 
     MemModInit((byte*)KernelHeapBase, HeapSize);
 

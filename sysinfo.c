@@ -1,7 +1,6 @@
 #include "sysinfo.h"
 #include "screen.h"
-
-uint gMemSize = 0;
+#include "global.h"
 
 void SysInfoCallHandler(uint cmd, uint param1, uint param2)
 {

@@ -17,6 +17,7 @@ extern SysCallHandler
 extern PageFaultHandler
 extern SegmentFaultHandler
 
+extern gMemSize
 extern gCTaskAddr
 extern gGdtInfo
 extern gIdtInfo
@@ -117,6 +118,9 @@ InitGlobal:
     mov eax, dword [LoadTaskEntry]
     mov dword [LoadTask], eax
 
+    mov eax, dword [MemSize]
+    mov dword [gMemSize], eax
+
     leave
 
     ret
@@ -127,16 +131,16 @@ InitGlobal:
 ReadPort:
     push ebp
     mov  ebp, esp
-    
+
     xor eax, eax
-    
+
     mov dx, [ebp + 8]
     in  al, dx
-    
+
     nop
     nop
     nop
-    
+
     leave
     
     ret
@@ -147,19 +151,19 @@ ReadPort:
 WritePort:
     push ebp
     mov  ebp, esp
-    
+
     xor eax, eax
-    
+
     mov dx, [ebp + 8]
     mov al, [ebp + 12]
     out dx, al
-    
+
     nop
     nop
     nop
-    
+
     leave
-    
+
     ret
 
 ;

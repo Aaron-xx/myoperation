@@ -50,7 +50,8 @@ kernel_src	:= kmain.c		\
 			   memory.c		\
 			   mutex.c		\
 			   keyboard.c	\
-			   event.c
+			   event.c		\
+			   sysinfo.c
 
 app_src		:= screen.c		\
                utility.c	\
