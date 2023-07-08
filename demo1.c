@@ -64,7 +64,7 @@ static void ProducerA()
     int next = 0;
     int run = 1;
 
-    SetPrintPos(0, 12);
+     SetPrintPos(TASK_START_W, TASK_START_H);
 
     PrintString(__FUNCTION__);
 

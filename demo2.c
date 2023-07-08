@@ -4,7 +4,7 @@
 #include "utility.h"
 #include "screen.h"
 
-static const uint NUM = 50;
+static const NUM = 50;
 static uint g_mutex_write = 0;
 static uint g_mutex_read = 0;
 static char g_data = 'A';
@@ -14,8 +14,6 @@ static int g_rcol = TASK_START_H + 2;
 
 static void Reader()
 {
-    static int next = 0;
-    static int col = 14;
     int run = 1;
 
     while( run )
@@ -31,25 +29,25 @@ static void Reader()
 
         run = !!g_data;
 
-        if( run )
+        if(run)
         {
             SetPrintPos(g_rnext, g_rcol);
             PrintChar(g_data);
         }
 
-        next++;
+        g_rnext++;
         
-        if( next == 50 )
+        if(g_rnext == 50)
         {
-            next = 0;
-            col++;
+            g_rnext = 0;
+            g_rcol++;
         }
 
         EnterCritical(g_mutex_read);
 
         g_count--;
         
-        if( g_count == 0 )
+        if(g_count == 0)
             ExitCritical(g_mutex_write);
 
         ExitCritical(g_mutex_read);
@@ -93,6 +91,10 @@ static void Initialize()
 {
     g_mutex_write = CreateMutex(Normal);
     g_mutex_read = CreateMutex(Strict);
+    g_rnext = TASK_START_W;
+    g_rcol = TASK_START_H + 2;
+    g_data = 'A';
+    g_count = 0;
 }
 
 static void Deinit()

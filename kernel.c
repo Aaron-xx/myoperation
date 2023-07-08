@@ -26,7 +26,7 @@ int GetDescValue(Descriptor* pDesc, uint* pBase, uint* pLimit, ushort* pAttr)
     
     if(ret = (pDesc && pBase && pLimit && pAttr))
     {
-        *pBase  = (pDesc->base3 << 24) | (pDesc->base2 << 16) | (pDesc->base1);
+        *pBase  = (pDesc->base3 << 24) | (pDesc->base2 << 16) | pDesc->base1;
         *pLimit = ((pDesc->attr2_limit2 & 0xF) << 16) | pDesc->limit1;
         *pAttr  = ((pDesc->attr2_limit2 & 0xF0) << 8) | pDesc->attr1; 
     }

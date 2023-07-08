@@ -2,9 +2,9 @@
 #include "screen.h"
 #include "type.h"
 
-static int  gPosW = 0;
-static int  gPosH = 0;
-static char gColor = SCREEN_WHITE;
+static byte gPosW = 0;
+static byte gPosH = 0;
+static byte gColor = SCREEN_WHITE;
 
 byte GetPrintPosH()
 {
@@ -38,7 +38,7 @@ int  SetPrintPos(byte w, byte h)
 {
     int ret = 0;
 
-    if( ret = ((0 <= w) && (w <= SCREEN_WIDTH) && (0 <= h) && (h <= SCREEN_HEIGHT)) )
+    if(ret = ((w <= SCREEN_WIDTH) && (h <= SCREEN_HEIGHT)))
     {
         ushort bx = SCREEN_WIDTH * h + w;
 
@@ -85,7 +85,7 @@ int PrintChar(char c)
         byte pw = gPosW;
         byte ph = gPosH;
 
-        if( (0 <= pw) && (pw <= SCREEN_WIDTH) && (0 <= ph) && (ph <= SCREEN_HEIGHT) )
+        if(ret = ((pw <= SCREEN_WIDTH) && (ph <= SCREEN_HEIGHT)))
         {
             uint edi = (SCREEN_WIDTH * ph + pw) * 2;
             byte ah = gColor;
@@ -127,7 +127,7 @@ int PrintString(const char* s)
     {
         while (*s)
         {
-            PrintChar(*s++);
+            ret += PrintChar(*s++);
         }
     }
     else

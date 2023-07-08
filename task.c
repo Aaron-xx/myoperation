@@ -20,7 +20,6 @@ static Queue gAppToRun = {0};
 static Queue gFreeTaskNode = {0};
 static Queue gReadyTask = {0};
 static Queue gRunningTask = {0};
-static Queue gWaittingTask = {0};
 
 static TSS gTSS = {0};
 static TaskNode* gIdleTask = NULL;
@@ -62,6 +61,7 @@ static void InitTask(Task* pt, uint id,const char* name, void(*entry)(), ushort 
     pt->id = id;
     pt->current = 0;
     pt->total = MAX_TIME_SLICE - pri;
+     pt->event = NULL;
 
     if(name)
     {
@@ -258,7 +258,6 @@ void TaskModInit()
     Queue_Init(&gFreeTaskNode);
     Queue_Init(&gRunningTask);
     Queue_Init(&gReadyTask);
-    Queue_Init(&gWaittingTask);
 
     for(i=0; i<MAX_TASK_NUM; i++)
     {
@@ -300,6 +299,12 @@ void LaunchTask()
     RunTask(gCTaskAddr);
 }
 
+void Schedule()
+{
+    RunningToReady();
+    ScheduleNext();
+}
+
 static void WaitEvent(Queue* wait, Event* event)
 {
     gCTaskAddr->event = event;
@@ -321,25 +326,6 @@ static void TaskSchedule(uint action, Event* event)
     {
         WaitEvent(&task->wait, event);
     }
-}
-
-void MtxSchedule(uint action)
-{
-    if(IsEqual(action, NOTIFY))
-    {
-        WaittingToReady(&gWaittingTask);
-    }
-    else if(IsEqual(action, WAIT))
-    {
-        RunningToWaitting(&gWaittingTask);
-        ScheduleNext();
-    }
-}
-
-void Schedule()
-{
-    RunningToReady();
-    ScheduleNext();
 }
 
 static void MutexSchedule(uint action, Event* event)
@@ -450,7 +436,7 @@ void TaskCallHandler(uint cmd, uint param1, uint param2)
 
 const char* CurrentTaskName()
 {
-    return gCTaskAddr->name;
+   return (const char*)gCTaskAddr->name;
 }
 
 uint CurrentTaskId()

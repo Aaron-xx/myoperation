@@ -1,0 +1,283 @@
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+index afa13e8..77e9542 100644
+--- a/.vscode/settings.json
++++ b/.vscode/settings.json
+@@ -33,6 +33,7 @@
+         "global.h": "c",
+         "keyboard.h": "c",
+         "event.h": "c",
+-        "shell.h": "c"
++        "shell.h": "c",
++        "sysinfo.h": "c"
+     }
+ }
+\ No newline at end of file
+diff --git a/Makefile b/Makefile
+index ed0f7ac..2f15c4f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -50,7 +50,8 @@ kernel_src	:= kmain.c		\
+ 			   memory.c		\
+ 			   mutex.c		\
+ 			   keyboard.c	\
+-			   event.c
++			   event.c		\
++			   sysinfo.c
+ 
+ app_src		:= screen.c		\
+                utility.c	\
+diff --git a/common.asm b/common.asm
+index 1ede198..7bdb55a 100644
+--- a/common.asm
++++ b/common.asm
+@@ -21,6 +21,7 @@ IdtEntry            equ       BaseOfSharedMemory + 8
+ IdtSize             equ       BaseOfSharedMemory + 12
+ RunTaskEntry        equ       BaseOfSharedMemory + 16
+ InitInterruptEntry  equ       BaseOfSharedMemory + 20
++MemSize                equ      BaseOfSharedMemory + 24
+ SendEOIEntry        equ       BaseOfSharedMemory + 28
+ LoadTaskEntry       equ       BaseOfSharedMemory + 32
+ AppMainEntry        equ       BaseOfSharedMemory + 36
+diff --git a/ihandler.c b/ihandler.c
+index f996e31..3ceac20 100644
+--- a/ihandler.c
++++ b/ihandler.c
+@@ -3,6 +3,7 @@
+ #include "screen.h"
+ #include "mutex.h"
+ #include "keyboard.h"
++#include "sysinfo.h"
+ 
+ extern byte ReadPort(ushort port);
+ 
+@@ -44,6 +45,9 @@ void SysCallHandler(uint type, uint cmd, uint param1, uint param2)
+         case 2:
+             KeyCallHandler(cmd, param1, param2);
+             break;
++        case 3:
++            SysInfoCallHandler(cmd, param1, param2);
++            break;
+         default:
+             break;
+     }
+diff --git a/kentry.asm b/kentry.asm
+index a75a7b2..272c8e8 100644
+--- a/kentry.asm
++++ b/kentry.asm
+@@ -17,6 +17,7 @@ extern SysCallHandler
+ extern PageFaultHandler
+ extern SegmentFaultHandler
+ 
++extern gMemSize
+ extern gCTaskAddr
+ extern gGdtInfo
+ extern gIdtInfo
+@@ -117,6 +118,9 @@ InitGlobal:
+     mov eax, dword [LoadTaskEntry]
+     mov dword [LoadTask], eax
+ 
++    mov eax, dword [MemSize]
++    mov dword [gMemSize], eax
++
+     leave
+ 
+     ret
+@@ -127,16 +131,16 @@ InitGlobal:
+ ReadPort:
+     push ebp
+     mov  ebp, esp
+-    
++
+     xor eax, eax
+-    
++
+     mov dx, [ebp + 8]
+     in  al, dx
+-    
++
+     nop
+     nop
+     nop
+-    
++
+     leave
+     
+     ret
+@@ -147,19 +151,19 @@ ReadPort:
+ WritePort:
+     push ebp
+     mov  ebp, esp
+-    
++
+     xor eax, eax
+-    
++
+     mov dx, [ebp + 8]
+     mov al, [ebp + 12]
+     out dx, al
+-    
++
+     nop
+     nop
+     nop
+-    
++
+     leave
+-    
++
+     ret
+ 
+ ;
+diff --git a/kmain.c b/kmain.c
+index a19c548..564c19a 100644
+--- a/kmain.c
++++ b/kmain.c
+@@ -6,6 +6,8 @@
+ #include "mutex.h"
+ #include "keyboard.h"
+ 
++extern uint gMemSize;
++
+ void KMain()
+ {
+     void (*AppModInit)() = (void *)BaseOfApp;
+@@ -28,6 +30,7 @@ void KMain()
+     PrintIntDec((uint)gIdtInfo.size);
+ 
+     PrintChar('\n');
++    PrintIntHex(gMemSize);
+ 
+     MemModInit((byte*)KernelHeapBase, HeapSize);
+ 
+diff --git a/loader.asm b/loader.asm
+index 5e4ef39..fa5d11b 100755
+--- a/loader.asm
++++ b/loader.asm
+@@ -120,6 +120,10 @@ BLMain:
+     cmp dx, 0
+     jz KernelErr
+ 
++	;  获取硬盘容量
++	call GetMemSize
++
++	;  为内核存储关键的全局信息
+ 	call StoreGlobal
+ 
+ 	; 1.load GDT
+@@ -208,6 +212,37 @@ initDescItem:
+ 
+ 	ret
+ 
++;
++;
++GetMemSize:
++	mov dword [MemSize], 0
++
++	xor eax, eax
++	mov eax, 0xE801
++
++	int 0x15
++
++	jc geterr
++
++	shl eax, 10     ; eax = eax * 1024
++
++	shl ebx, 6 + 10 ; ebx = ebx * 64 * 1024
++
++	mov ecx, 1
++	shl ecx, 20     ; ecx = 1024 * 1024
++
++	add dword [MemSize], eax
++	add dword [MemSize], ebx
++	add dword [MemSize], ecx
++
++	jmp getok
++
++geterr:
++	mov dword [MemSize], 0
++
++getok:    
++	ret
++
+ [section .sfunc]
+ [bits 32]
+ ;
+diff --git a/shell.c b/shell.c
+index 719b682..b4e84cf 100644
+--- a/shell.c
++++ b/shell.c
+@@ -38,16 +38,34 @@ static byte GetKeyCode(uint kc)
+     return (byte)(kc >> 8);
+ }
+ 
++static void Mem()
++{
++    uint ms = GetMemSize() >> 20;
++    int w = 0;
++    
++    SetPrintPos(CMD_START_W, CMD_START_H + 1);
++    
++    for(w=CMD_START_W; w<SCREEN_WIDTH; w++)
++    {
++        PrintChar(' ');
++    }
++    
++    SetPrintPos(CMD_START_W, CMD_START_H + 1);
++    PrintString("Physical Memory: ");
++    PrintIntDec(ms);
++    PrintString(" MB\n");
++}
++
+ static void Clear()
+ {
+     int h = 0;
+     int w = 0;
+ 
+-    SetPrintPos(CMD_START_W, CMD_START_H);
++    SetPrintPos(ERR_START_W, ERR_START_H);
+     
+-    for(h=CMD_START_H; h<SCREEN_HEIGHT; h++)
++    for(h=ERR_START_H; h<SCREEN_HEIGHT; h++)
+     {
+-        for(w=CMD_START_W; w<SCREEN_WIDTH; w++)
++        for(w=ERR_START_W; w<SCREEN_WIDTH; w++)
+         {
+             PrintChar(' ');
+         }
+@@ -207,6 +225,7 @@ void Shell()
+ {
+     List_Init(&gCmdList);
+ 
++    AddCmdEntry("mem", Mem);
+     AddCmdEntry("clear", Clear);
+     AddCmdEntry("demo1", Demo1);
+     AddCmdEntry("demo2", Demo2);
+diff --git a/syscall.c b/syscall.c
+index 4f0a069..385ca63 100644
+--- a/syscall.c
++++ b/syscall.c
+@@ -82,3 +82,12 @@ uint ReadKey()
+     
+     return ret;
+ }
++
++uint GetMemSize()
++{
++    uint ret = 0;
++
++    SysCall(3, 0, &ret, 0);
++
++    return ret;
++}
+\ No newline at end of file
+diff --git a/syscall.h b/syscall.h
+index 5a97a88..28662cb 100644
+--- a/syscall.h
++++ b/syscall.h
+@@ -19,5 +19,6 @@ void ExitCritical(uint mutex);
+ uint DestroyMutex(uint mutex);
+ 
+ uint ReadKey();
++uint GetMemSize();
+ 
+ #endif
