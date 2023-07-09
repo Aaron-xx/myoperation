@@ -34,6 +34,7 @@
         "keyboard.h": "c",
         "event.h": "c",
         "shell.h": "c",
-        "sysinfo.h": "c"
+        "sysinfo.h": "c",
+        "cstddef": "c"
     }
 }
