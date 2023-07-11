@@ -6,6 +6,7 @@
 #include "mutex.h"
 #include "keyboard.h"
 #include "hdraw.h"
+#include "fs.h"
 
 void KMain()
 {
@@ -39,6 +40,10 @@ void KMain()
     KeyboardModInit();
 
     MutexModInit();
+
+    HDRawModInit();
+
+    PrintIntDec(FSIsFormatted());
 
     // AppModInit();
 

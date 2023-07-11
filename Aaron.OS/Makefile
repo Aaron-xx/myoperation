@@ -52,7 +52,8 @@ kernel_src	:= kmain.c		\
 			   keyboard.c	\
 			   event.c		\
 			   sysinfo.c	\
-			   hdraw.c
+			   hdraw.c		\
+			   fs.c
 
 app_src		:= screen.c		\
                utility.c	\

@@ -46,8 +46,6 @@ void HDRawModInit()
 
         fread(gHDBuf, 1, length, fp);
 
-                printf("%d\n",gHDBuf[512]);
-
         gSectors = length / SECT_SIZE;
 
         fclose(fp);
