@@ -30,6 +30,7 @@ byte* MemCpy(byte* dst, const byte* src, uint n)
     {
         for (i = 0; i < n; i++)
         {
+            // printf("%d\n",dst[i]);
             dst[i] = src[i];
         }
     }

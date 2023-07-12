@@ -43,7 +43,11 @@ void KMain()
 
     HDRawModInit();
 
+
+    PrintIntDec(FSFormat());
     PrintIntDec(FSIsFormatted());
+    PrintIntDec(FCreate("test.txt"));
+    PrintIntDec(FExisted("test.txt"));
 
     // AppModInit();
 

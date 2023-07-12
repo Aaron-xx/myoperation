@@ -35,6 +35,7 @@
         "event.h": "c",
         "shell.h": "c",
         "sysinfo.h": "c",
-        "cstddef": "c"
+        "cstddef": "c",
+        "hdraw.h": "c"
     }
 }
