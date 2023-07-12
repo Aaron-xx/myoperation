@@ -1,6 +1,7 @@
 #include "hdraw.h"
 #include "fs.h"
 #include "utility.h"
+#include "screen.h"
 
 #ifdef DTFSER
 #include <malloc.h>
@@ -344,7 +345,7 @@ static uint CreateFileEntry(const char* name, uint sctBegin, uint lastBytes)
      if((last != SCT_END_FLAG) && (feBase = (FileEntry*)ReadSector(last)))
     {
         uint offset = lastBytes / FE_BYTES;
-        FileEntry* fe = AddrOff(fe, offset);
+        FileEntry* fe = AddrOff(feBase, offset);
 
         StrCpy(fe->name, name, sizeof(fe->name) - 1);
 
@@ -394,9 +395,10 @@ static FileEntry* FindInSector(const char* name, FileEntry* feBase, uint cnt)
        if( StrCmp(fe->name, name, -1))
        {
             ret = (FileEntry*)Malloc(FE_BYTES);
+
             if (ret)
             {
-                ret = fe;
+                *ret = *fe;
             }
             
             break;
@@ -557,6 +559,135 @@ uint FSFormat()
     return ret;
 }
 
+static uint IsOpened(const char* name)
+{
+    uint ret = 0;
+
+    return ret;
+}
+
+static uint FreeFile(uint sctBegin)
+{
+    uint slider = sctBegin;
+    uint ret = 0;
+
+    while (slider != SCT_END_FLAG)
+    {
+        uint next = NextSector(slider);
+
+        ret += FreeSector(slider);
+
+        slider = next;
+    }
+    
+    return ret;
+}
+
+static void MoveFileEntry(FileEntry* dst, FileEntry* src)
+{
+    uint inSctIdx = dst->inSctIdx;
+    uint inSctOff = dst->inSctOff;
+
+    *dst = *src;
+
+    dst->inSctIdx = inSctIdx;
+    dst->inSctOff = inSctOff;
+}
+
+static uint AdjustStorage(FSRoot* fe)
+{
+    uint ret = 0;
+
+    if(!fe->lastBytes)
+    {
+        uint last = FindLast(fe->sctBegin);
+        uint prev = FindPrev(fe->sctBegin, last);
+
+        if(FreeSector(last) && MarkSector(prev))
+        {
+            fe->sctNum--;
+            fe->lastBytes = SECT_SIZE;
+
+            if(!fe->sctNum)
+            {
+                fe->sctBegin = SCT_END_FLAG;
+            }
+
+            ret = 1;
+        }
+    }
+
+    return ret;
+}
+
+static uint EraseLast(FSRoot* fe, uint bytes)
+{
+    uint ret = 0;
+
+    while (fe->sctNum && bytes)
+    {
+       if(bytes < fe->lastBytes)
+       {
+            fe->lastBytes -= bytes;
+            ret += bytes;
+
+            bytes = 0;
+       }
+       else
+       {
+            bytes -= fe->lastBytes;
+            ret += fe->lastBytes;
+            fe->lastBytes = 0;
+
+            AdjustStorage(fe);
+       }
+    }
+    
+}
+
+static uint DeleteInRoot(const char* name)
+{
+    FSRoot* root = (FSRoot*)ReadSector(ROOT_SCT_IDX);
+    FileEntry* fe = FindInRoot(name);
+    uint ret = 0;
+
+    if(root && fe)
+    {
+        uint last = FindLast(root->sctBegin);
+        FileEntry* feTarget = ReadSector(fe->inSctIdx);
+        FileEntry* feLast = (last != SCT_END_FLAG) ? ReadSector(last) : NULL;
+
+        if(feTarget && feLast)
+        {
+            uint lastOff = root->lastBytes / FE_BYTES - 1;
+            FileEntry* lastItem = AddrOff(feLast, lastOff);
+            FileEntry* targetItem = AddrOff(feTarget, fe->inSctOff);
+
+            FreeFile(targetItem->sctBegin);
+
+            MoveFileEntry(targetItem, lastItem);
+
+            EraseLast(root, FE_BYTES);
+
+            ret = HDRawWrite(ROOT_SCT_IDX, (byte*)root) &&
+                    HDRawWrite(fe->inSctIdx, (byte*)feTarget);
+        }
+
+        Free(feTarget);
+        Free(feLast);
+    }
+
+    Free(root);
+    Free(fe);
+
+    return ret;
+}
+
+uint FDelete(const char* fn)
+{
+    return fn && !IsOpened(fn) && DeleteInRoot(fn) ? FS_SUCCEED : FS_FAILED;
+}
+
 uint FSIsFormatted()
 {
     uint ret = 0;
@@ -574,4 +705,71 @@ uint FSIsFormatted()
     Free(root);
 
     return ret;
+}
+
+static uint FlushFileEntry(FileEntry* fe)
+{
+    uint ret = 0;
+    FileEntry* feBase = ReadSector(fe->inSctIdx);
+    FileEntry* feInSct = AddrOff(feBase, fe->inSctOff);
+
+    *feInSct = *fe;
+
+    ret = HDRawWrite(fe->inSctIdx, (byte*)feBase);
+
+    Free(feBase);
+
+    return ret;
+}
+
+uint FRename(const char* ofn, const char* nfn)
+{
+    uint ret = FS_FAILED;
+
+    if(ofn && !IsOpened(ofn) && nfn)
+    {
+        FileEntry* ofe = FindInRoot(ofn);
+        FileEntry* nfe = FindInRoot(nfn);
+
+        if(ofe && !nfe)
+        {
+            StrCpy(ofe->name, nfn, sizeof(ofe->name) -1);
+
+            if(FlushFileEntry(ofe))
+            {
+                ret = FS_SUCCEED;
+            }
+        }
+
+        Free(ofe);
+        Free(nfe);
+    }
+
+    return ret;
+}
+
+
+void test()
+{
+    FSRoot* root = (FSRoot*)ReadSector(ROOT_SCT_IDX);
+    FileEntry* feBase = (FileEntry*)ReadSector(root->sctBegin);
+    int i = 0;
+    int n = 0;
+
+    PrintString("sctNum = ");
+    PrintIntDec(root->sctNum);
+    PrintChar('\n');
+    PrintString("lastBytes = ");
+    PrintIntDec(root->lastBytes);
+    PrintChar('\n');
+
+    n = root->lastBytes / FE_BYTES;
+
+    for(i=0; i<n; i++)
+    {
+        FileEntry* fe = AddrOff(feBase, i);
+        PrintString("name =");
+        PrintString(fe->name);
+        PrintChar('\n');
+    }
 }

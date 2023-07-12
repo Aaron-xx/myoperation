@@ -6,7 +6,8 @@
 #include "event.h"
 #include "app.h"
 
-typedef struct {
+typedef struct 
+{
     uint gs;
     uint fs;
     uint es;

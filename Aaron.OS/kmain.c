@@ -43,11 +43,19 @@ void KMain()
 
     HDRawModInit();
 
+    // printf("format: %d\n", FSFormat());
+    // PrintIntDec(FCreate("1.txt"));
+    // PrintIntDec(FCreate("2.txt"));
+    // PrintIntDec(FCreate("3.txt"));
+    // PrintIntDec(FCreate("4.txt"));
+    // PrintIntDec( FCreate("5.txt"));
 
-    PrintIntDec(FSFormat());
-    PrintIntDec(FSIsFormatted());
-    PrintIntDec(FCreate("test.txt"));
-    PrintIntDec(FExisted("test.txt"));
+    // PrintIntDec(FDelete("3.txt"));
+    // PrintIntDec(FRename("5.txt", "test.txt"));
+    // PrintIntDec(FExisted("5.txt"));
+    // PrintIntDec(FExisted("test.txt"));
+
+    // test();
 
     // AppModInit();
 
