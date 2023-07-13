@@ -41,21 +41,38 @@ void KMain()
 
     MutexModInit();
 
-    HDRawModInit();
+    FSModInit();
 
-    // printf("format: %d\n", FSFormat());
-    // PrintIntDec(FCreate("1.txt"));
-    // PrintIntDec(FCreate("2.txt"));
-    // PrintIntDec(FCreate("3.txt"));
-    // PrintIntDec(FCreate("4.txt"));
-    // PrintIntDec( FCreate("5.txt"));
+    if( FSIsFormatted() )
+    {
+        const char* fn = "test.txt";
+        char str[] = "Aaron.OS";
 
-    // PrintIntDec(FDelete("3.txt"));
-    // PrintIntDec(FRename("5.txt", "test.txt"));
-    // PrintIntDec(FExisted("5.txt"));
-    // PrintIntDec(FExisted("test.txt"));
+        if( FExisted(fn) == FS_EXISTED )
+        {
+            FDelete(fn);
+        }
+        
+        PrintString("create =  ");
+        PrintIntDec(FCreate(fn));
 
-    // test();
+        PrintChar('\n');
+
+        uint fd = FOpen(fn);
+        PrintString("fd = ");
+        PrintIntDec(fd);
+
+        PrintChar('\n');
+
+        PrintString("write bytes =  ");
+        PrintIntDec(FWrite(fd, str, sizeof(str)));
+
+        PrintChar('\n');
+
+        FClose(fd);
+
+        test(fn);
+    }
 
     // AppModInit();
 

@@ -2,6 +2,7 @@
 #include "fs.h"
 #include "utility.h"
 #include "screen.h"
+#include "list.h"
 
 #ifdef DTFSER
 #include <malloc.h>
@@ -18,6 +19,7 @@
 #define FIXED_SCT_SIZE 2
 #define SCT_END_FLAG   ((uint)-1)
 #define FE_BYTES       sizeof(FileEntry)
+#define FD_BYTES       sizeof(FileDesc)
 #define FE_ITEM_CNT    (SECT_SIZE / FE_BYTES)
 #define MAP_ITEM_CNT   (SECT_SIZE/sizeof(uint))
 
@@ -53,11 +55,30 @@ typedef struct
 
 typedef struct
 {
+    ListNode head;
+    FileEntry fe;
+    uint objIdx;
+    uint offset;
+    uint changed;
+    byte cache[SECT_SIZE];
+} FileDesc;
+
+typedef struct
+{
     uint* pSct;
     uint sctIdx;
     uint sctOff;
     uint idxOff;
 } MapPos;
+
+static List gFDList = {0};
+
+void FSModInit()
+{
+    HDRawModInit();
+
+    List_Init(&gFDList);
+}
 
 static void* ReadSector(uint si)
 {
@@ -330,6 +351,8 @@ static uint CheckStorage(FSRoot* fe)
 
             fe->sctNum++;
             fe->lastBytes = 0;
+
+            ret = 1;
         }
     }
 
@@ -683,6 +706,195 @@ static uint DeleteInRoot(const char* name)
     return ret;
 }
 
+uint FOpen(const char *fn)
+{
+    FileDesc* ret = NULL;
+
+    if(fn && !IsOpened(fn))
+    {
+        FileEntry*fe = NULL;
+
+        ret = (FileDesc*)Malloc(FD_BYTES);
+        fe  = ret ? FindInRoot(fn) : NULL;
+
+        if(ret && fe)
+        {
+            ret->fe = *fe;
+            ret->objIdx = SCT_END_FLAG;
+            ret->offset = SECT_SIZE;
+            ret->changed = 0;
+
+            List_Add(&gFDList, (ListNode*)ret);
+        }
+
+        Free(fe);
+    }
+
+    return (uint)ret;
+}
+
+static uint FlushCache(FileDesc* fd)
+{
+    uint ret = 1;
+
+    if(fd->changed)
+    {
+        uint sctIdx = FindIndex(fd->fe.sctBegin, fd->objIdx);
+        ret = 0;
+
+        if( (sctIdx != SCT_END_FLAG) && (ret = HDRawWrite(sctIdx, fd->cache)) )
+        {
+            fd->changed = 0;
+        }
+    }
+    
+    return ret;
+}
+
+static uint FlushFileEntry(FileEntry* fe)
+{
+    uint ret = 0;
+    FileEntry* feBase = ReadSector(fe->inSctIdx);
+    FileEntry* feInSct = AddrOff(feBase, fe->inSctOff);
+
+    *feInSct = *fe;
+
+    ret = HDRawWrite(fe->inSctIdx, (byte*)feBase);
+
+    Free(feBase);
+
+    return ret;
+}
+
+static uint IsFDValid(FileDesc* fd)
+{
+    uint ret = 0;
+    ListNode* pos = NULL;
+
+    List_ForEach(&gFDList, pos)
+    {
+        if(IsEqual(pos, fd))
+        {
+            ret = 1;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+static uint ToFlush(FileDesc* fd)
+{
+    return FlushCache(fd) && FlushFileEntry(&fd->fe);
+}
+
+void FClose(uint fd)
+{
+    FileDesc* pf = (FileDesc*)fd;
+
+    if(IsFDValid(pf))
+    {
+        ToFlush(pf);
+
+        List_DelNode((ListNode*)pf);
+
+        Free(pf);
+    }
+}
+
+static uint ReadToCache(FileDesc* fd, uint idx)
+{
+    uint ret = 0;
+
+    if(idx < fd->fe.sctNum)
+    {
+        uint sctIdx = FindIndex(fd->fe.sctBegin, idx);
+
+        ToFlush(fd);
+
+        if( (sctIdx != SCT_END_FLAG) && (ret = HDRawRead(sctIdx, fd->cache)) )
+        {
+            fd->objIdx = idx;
+            fd->offset = 0;
+            fd->changed = 0;
+        }
+    }
+
+    return ret;
+}
+
+static uint PrepareCache(FileDesc* fd, uint objIdx)
+{
+    CheckStorage(&fd->fe);
+
+    return ReadToCache(fd, objIdx);
+}
+
+static uint CopyToCache(FileDesc* fd, byte* buf, uint len)
+{
+    uint ret = -1;
+
+    if(fd->objIdx != SCT_END_FLAG)
+    {
+        uint n = SECT_SIZE - fd->offset;
+        byte* p = AddrOff(fd->cache, fd->offset);
+
+        n = (n < len) ? n : len;
+
+        MemCpy(p, buf, n);
+
+        fd->offset += n;
+        fd->changed = 1;
+
+        if( ((fd->fe.sctNum - 1) == fd->objIdx) && (fd->fe.lastBytes < fd->offset) )
+        {
+            fd->fe.lastBytes = fd->offset;
+        }
+
+        ret = n;
+    }
+
+    return ret;
+}
+
+static uint ToWrite(FileDesc* fd, byte* buf, uint len)
+{
+    uint ret = 1;
+    uint i = 0;
+    uint n = 0;
+
+    while( (i < len) && ret )
+    {
+        byte* p = AddrOff(buf, i);
+        if(fd->offset == SECT_SIZE)
+        {
+            ret = PrepareCache(fd, fd->objIdx + 1);
+        }
+
+        if(ret)
+        {
+            n = CopyToCache(fd, p, len - i);
+            i += n;
+        }
+    }
+
+    ret = i;
+
+    return ret;
+}
+
+uint FWrite(uint fd, byte* buf, uint len)
+{
+    uint ret = -1;
+
+    if(IsFDValid((FileDesc*)fd) && buf)
+    {
+        ret = ToWrite((FileDesc*)fd, buf, len);
+    }
+
+    return ret;
+}
+
 uint FDelete(const char* fn)
 {
     return fn && !IsOpened(fn) && DeleteInRoot(fn) ? FS_SUCCEED : FS_FAILED;
@@ -703,21 +915,6 @@ uint FSIsFormatted()
 
     Free(header);
     Free(root);
-
-    return ret;
-}
-
-static uint FlushFileEntry(FileEntry* fe)
-{
-    uint ret = 0;
-    FileEntry* feBase = ReadSector(fe->inSctIdx);
-    FileEntry* feInSct = AddrOff(feBase, fe->inSctOff);
-
-    *feInSct = *fe;
-
-    ret = HDRawWrite(fe->inSctIdx, (byte*)feBase);
-
-    Free(feBase);
 
     return ret;
 }
@@ -748,28 +945,19 @@ uint FRename(const char* ofn, const char* nfn)
     return ret;
 }
 
-
-void test()
+void test(const char* fn)
 {
-    FSRoot* root = (FSRoot*)ReadSector(ROOT_SCT_IDX);
-    FileEntry* feBase = (FileEntry*)ReadSector(root->sctBegin);
-    int i = 0;
-    int n = 0;
+    FileEntry* fe = FindInRoot(fn);
 
-    PrintString("sctNum = ");
-    PrintIntDec(root->sctNum);
-    PrintChar('\n');
-    PrintString("lastBytes = ");
-    PrintIntDec(root->lastBytes);
-    PrintChar('\n');
-
-    n = root->lastBytes / FE_BYTES;
-
-    for(i=0; i<n; i++)
+    if( fe )
     {
-        FileEntry* fe = AddrOff(feBase, i);
-        PrintString("name =");
-        PrintString(fe->name);
+        byte buf[SECT_SIZE] = {0};
+
+        HDRawRead(fe->sctBegin, buf);
+
+        PrintString("content =");
+        PrintString(buf);
+
         PrintChar('\n');
     }
 }
