@@ -1,0 +1,146 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/kali/work/Aaron.OS'
+mkdir bins deps objs
+ 
+Creatng deps/fs.dep ...
+objs/fs.o @ : fs.c hdraw.h type.h fs.h utility.h screen.h list.h const.h memory.h
+Creatng deps/hdraw.dep ...
+objs/hdraw.o @ : hdraw.c hdraw.h type.h memory.h
+Creatng deps/sysinfo.dep ...
+objs/sysinfo.o @ : sysinfo.c sysinfo.h type.h screen.h global.h task.h kernel.h \
+ const.h queue.h list.h utility.h event.h app.h
+Creatng deps/event.dep ...
+objs/event.o @ : event.c event.h type.h memory.h
+Creatng deps/keyboard.dep ...
+ 
+objs/keyboard.o @ : keyboard.c keyboard.h type.h utility.h queue.h list.h const.h \
+ event.h task.h kernel.h app.h
+Creatng deps/mutex.dep ...
+ 
+objs/mutex.o @ : mutex.c mutex.h type.h queue.h list.h const.h utility.h memory.h \
+ screen.h task.h kernel.h event.h app.h global.h
+Creatng deps/memory.dep ...
+ 
+objs/memory.o @ : memory.c memory.h type.h utility.h list.h const.h
+ 
+Creatng deps/queue.dep ...
+ 
+objs/queue.o @ : queue.c queue.h list.h const.h utility.h type.h
+Creatng deps/list.dep ...
+ 
+objs/list.o @ : list.c list.h const.h utility.h type.h
+Creatng deps/global.dep ...
+ 
+objs/global.o @ : global.c global.h type.h task.h kernel.h const.h queue.h list.h \
+ utility.h event.h app.h
+Creatng deps/ihandler.dep ...
+ 
+objs/ihandler.o @ : ihandler.c task.h kernel.h type.h const.h queue.h list.h \
+ utility.h event.h app.h global.h screen.h mutex.h keyboard.h sysinfo.h
+ 
+Creatng deps/interrupt.dep ...
+ 
+objs/interrupt.o @ : interrupt.c utility.h type.h interrupt.h kernel.h const.h \
+ ihandler.h screen.h global.h task.h queue.h list.h event.h app.h
+Creatng deps/task.dep ...
+ 
+objs/task.o @ : task.c utility.h type.h task.h kernel.h const.h queue.h list.h \
+ event.h app.h screen.h memory.h mutex.h global.h
+ 
+Creatng deps/utility.dep ...
+ 
+objs/utility.o @ : utility.c utility.h type.h
+ 
+Creatng deps/kernel.dep ...
+ 
+objs/kernel.o @ : kernel.c kernel.h type.h const.h
+ 
+Creatng deps/screen.dep ...
+ 
+objs/screen.o @ : screen.c kernel.h type.h const.h screen.h
+Creatng deps/kmain.dep ...
+ 
+objs/kmain.o @ : kmain.c task.h kernel.h type.h const.h queue.h list.h utility.h \
+ event.h app.h interrupt.h screen.h global.h memory.h mutex.h keyboard.h \
+ hdraw.h fs.h
+ 
+Creatng deps/app.dep ...
+ 
+objs/app.o @ : app.c shell.h syscall.h type.h const.h screen.h demo1.h
+ 
+Creatng deps/shell.dep ...
+ 
+objs/shell.o @ : shell.c shell.h syscall.h type.h screen.h list.h const.h \
+ utility.h memory.h demo1.h demo2.h
+ 
+Creatng deps/demo2.dep ...
+ 
+objs/demo2.o @ : demo2.c demo2.h syscall.h type.h utility.h screen.h
+ 
+Creatng deps/demo1.dep ...
+ 
+objs/demo1.o @ : demo1.c demo1.h memory.h type.h syscall.h list.h const.h \
+ utility.h screen.h
+Creatng deps/syscall.dep ...
+ 
+objs/syscall.o @ : syscall.c syscall.h type.h screen.h app.h
+ 
+mkdir mnt
+dd if=/dev/zero of=Aaron  bs=512 count=2880
+mkfs.msdos -F 12 -n "Aaron" Aaron > /dev/null
+ 
+bximage -imgmode="flat" -mode=create -hd=20 -q  hd.img
+mkdir bins deps objs
+mkdir bins deps objs
+ 
+nasm -g boot.asm -o boot
+dd if=boot of=Aaron bs=512 count=1 conv=notrunc
+ 
+nasm common.asm -o loader
+sudo mount -o loop Aaron mnt
+sudo cp loader mnt/loader
+sudo umount mnt
+ 
+nasm -f elf common.asm -o objs/kentry.o
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/kmain.o -c kmain.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/screen.o -c screen.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/kernel.o -c kernel.c
+ 
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/utility.o -c utility.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/task.o -c task.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/interrupt.o -c interrupt.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/ihandler.o -c ihandler.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/global.o -c global.c
+ 
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/list.o -c list.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/queue.o -c queue.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/memory.o -c memory.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/mutex.o -c mutex.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/keyboard.o -c keyboard.c
+ 
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/event.o -c event.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/sysinfo.o -c sysinfo.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/hdraw.o -c hdraw.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/fs.o -c fs.c
+ld -m elf_i386 -s objs/kentry.o objs/kmain.o objs/screen.o objs/kernel.o objs/utility.o objs/task.o objs/interrupt.o objs/ihandler.o objs/global.o objs/list.o objs/queue.o objs/memory.o objs/mutex.o objs/keyboard.o objs/event.o objs/sysinfo.o objs/hdraw.o objs/fs.o -o bins/kernel.bin -T ld.script
+objcopy --set-start 0xB000 bins/kernel.bin -O binary kernel
+sudo mount -o loop Aaron mnt
+ 
+sudo cp kernel mnt/kernel
+sudo umount mnt
+ 
+nasm -f elf aentry.asm -o objs/aentry.o
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/syscall.o -c syscall.c
+ 
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/demo1.o -c demo1.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/demo2.o -c demo2.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/shell.o -c shell.c
+gcc -m32 -fno-builtin -fno-stack-protector  -o objs/app.o -c app.c
+ld -m elf_i386 -s objs/aentry.o objs/screen.o objs/utility.o objs/list.o objs/queue.o objs/memory.o objs/syscall.o objs/demo1.o objs/demo2.o objs/shell.o objs/app.o -o bins/app.bin -T ld.script
+objcopy --set-start 0x12000 bins/app.bin -O binary app
+sudo mount -o loop Aaron mnt
+sudo cp app mnt/app
+sudo umount mnt
+echo "succeed! ==> Aaron.OS"
+make: Leaving directory '/home/kali/work/Aaron.OS'
+ 

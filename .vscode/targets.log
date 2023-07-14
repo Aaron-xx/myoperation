@@ -1,0 +1,1599 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+Creatng deps/fs.dep ...
+ 
+objs/fs.o @ : fs.c hdraw.h type.h fs.h utility.h screen.h list.h const.h memory.h
+ 
+Creatng deps/hdraw.dep ...
+ 
+objs/hdraw.o @ : hdraw.c hdraw.h type.h memory.h
+ 
+Creatng deps/sysinfo.dep ...
+ 
+objs/sysinfo.o @ : sysinfo.c sysinfo.h type.h screen.h global.h task.h kernel.h \
+ const.h queue.h list.h utility.h event.h app.h
+ 
+Creatng deps/event.dep ...
+ 
+objs/event.o @ : event.c event.h type.h memory.h
+ 
+Creatng deps/keyboard.dep ...
+ 
+objs/keyboard.o @ : keyboard.c keyboard.h type.h utility.h queue.h list.h const.h \
+ event.h task.h kernel.h app.h
+ 
+Creatng deps/mutex.dep ...
+ 
+objs/mutex.o @ : mutex.c mutex.h type.h queue.h list.h const.h utility.h memory.h \
+ screen.h task.h kernel.h event.h app.h global.h
+ 
+Creatng deps/memory.dep ...
+ 
+objs/memory.o @ : memory.c memory.h type.h utility.h list.h const.h
+ 
+Creatng deps/queue.dep ...
+ 
+objs/queue.o @ : queue.c queue.h list.h const.h utility.h type.h
+ 
+Creatng deps/list.dep ...
+ 
+objs/list.o @ : list.c list.h const.h utility.h type.h
+ 
+Creatng deps/global.dep ...
+ 
+objs/global.o @ : global.c global.h type.h task.h kernel.h const.h queue.h list.h \
+ utility.h event.h app.h
+ 
+Creatng deps/ihandler.dep ...
+ 
+objs/ihandler.o @ : ihandler.c task.h kernel.h type.h const.h queue.h list.h \
+ utility.h event.h app.h global.h screen.h mutex.h keyboard.h sysinfo.h
+ 
+Creatng deps/interrupt.dep ...
+ 
+objs/interrupt.o @ : interrupt.c utility.h type.h interrupt.h kernel.h const.h \
+ ihandler.h screen.h global.h task.h queue.h list.h event.h app.h
+ 
+Creatng deps/task.dep ...
+ 
+objs/task.o @ : task.c utility.h type.h task.h kernel.h const.h queue.h list.h \
+ event.h app.h screen.h memory.h mutex.h global.h
+ 
+Creatng deps/utility.dep ...
+ 
+objs/utility.o @ : utility.c utility.h type.h
+ 
+Creatng deps/kernel.dep ...
+ 
+objs/kernel.o @ : kernel.c kernel.h type.h const.h
+ 
+Creatng deps/screen.dep ...
+ 
+objs/screen.o @ : screen.c kernel.h type.h const.h screen.h
+ 
+Creatng deps/kmain.dep ...
+ 
+objs/kmain.o @ : kmain.c task.h kernel.h type.h const.h queue.h list.h utility.h \
+ event.h app.h interrupt.h screen.h global.h memory.h mutex.h keyboard.h \
+ hdraw.h fs.h
+ 
+Creatng deps/app.dep ...
+ 
+objs/app.o @ : app.c shell.h syscall.h type.h const.h screen.h demo1.h
+ 
+Creatng deps/shell.dep ...
+ 
+objs/shell.o @ : shell.c shell.h syscall.h type.h screen.h list.h const.h \
+ utility.h memory.h demo1.h demo2.h
+ 
+Creatng deps/demo2.dep ...
+ 
+objs/demo2.o @ : demo2.c demo2.h syscall.h type.h utility.h screen.h
+ 
+Creatng deps/demo1.dep ...
+ 
+objs/demo1.o @ : demo1.c demo1.h memory.h type.h syscall.h list.h const.h \
+ utility.h screen.h
+ 
+Creatng deps/syscall.dep ...
+ 
+objs/syscall.o @ : syscall.c syscall.h type.h screen.h app.h
+ 
+# GNU Make 4.3
+# Built for x86_64-pc-linux-gnu
+# Copyright (C) 1988-2020 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+ 
+
+# Make data base, printed on Fri Jul 14 10:52:02 2023
+
+# Variables
+
+# environment
+GDK_BACKEND = x11
+# environment
+LC_ALL = C
+# environment
+VSCODE_CWD = /home/kali
+# environment
+LESS_TERMCAP_me = [0m
+# default
+MAKE_COMMAND := make
+# environment
+QT_ACCESSIBILITY = 1
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# makefile (from 'Makefile', line 42)
+KENTRY_SRC := kentry.asm
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# default
+.VARIABLES := 
+# environment
+PWD = /home/kali/work/Aaron.OS
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# environment
+XDG_DATA_DIRS = /usr/share/xfce4:/usr/local/share/:/usr/share/:/usr/share
+# makefile (from 'Makefile', line 40)
+BOOT_SRC := boot.asm
+# environment
+OLDPWD = /home/kali
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# automatic
+%F = $(notdir $%)
+# environment
+VSCODE_CODE_CACHE_PATH = /home/kali/.config/Code/CachedData/97dec172d3256f8ca4bfb2143f3f76b503ca0534
+# environment
+XDG_SESSION_PATH = /org/freedesktop/DisplayManager/Session0
+# environment
+LANG = C
+# environment
+POWERSHELL_UPDATECHECK = Off
+# environment
+XAUTHORITY = /home/kali/.Xauthority
+# default
+.LOADED := 
+# environment
+LESS_TERMCAP_md = [1;36m
+# default
+.INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
+# makefile
+MAKEFLAGS = pqrR
+# environment
+LESS_TERMCAP_so = [01;33m
+# makefile (from 'Makefile', line 76)
+KERNEL_OUT := kernel
+# makefile
+CURDIR := /home/kali/work/Aaron.OS
+# makefile (from 'Makefile', line 26)
+BXIFALGE := -imgmode="flat" -mode=create -hd=20 -q
+# makefile (from 'Makefile', line 2)
+NASMFLAGS := -f elf
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# makefile (from 'Makefile', line 36)
+DIRS := bins deps objs
+# environment
+LESS_TERMCAP_ue = [0m
+# environment
+MFLAGS = -pqrR
+# environment
+SSH_AUTH_SOCK = /tmp/ssh-XXXXXXZWzEfA/agent.1342
+# default
+.SHELLFLAGS := -c
+# environment
+XDG_CONFIG_DIRS = /etc/xdg
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# environment
+XDG_SESSION_DESKTOP = lightdm-xsession
+# makefile (from 'Makefile', line 1)
+MAKEFILE_LIST := Makefile
+# makefile (from 'Makefile', line 25)
+BXIMAGE := bximage
+# automatic
+@F = $(notdir $@)
+# environment
+VSCODE_PID = 3030
+# makefile (from 'Makefile', line 20)
+MKFS := mkfs.msdos
+# environment
+XDG_SESSION_TYPE = x11
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# makefile (from 'Makefile', line 22)
+CP := cp
+# environment
+SESSION_MANAGER = local/kali:@/tmp/.ICE-unix/1342,unix/kali:/tmp/.ICE-unix/1342
+# makefile (from 'Makefile', line 87)
+KERNEL_DEPS := deps/kmain.dep deps/screen.dep deps/kernel.dep deps/utility.dep deps/task.dep deps/interrupt.dep deps/ihandler.dep deps/global.dep deps/list.dep deps/queue.dep deps/memory.dep deps/mutex.dep deps/keyboard.dep deps/event.dep deps/sysinfo.dep deps/hdraw.dep deps/fs.dep
+# automatic
+*F = $(notdir $*)
+# makefile (from 'Makefile', line 17)
+MOUNT := mount
+# environment
+QT_QPA_PLATFORMTHEME = qt5ct
+# environment
+CHROME_DESKTOP = code-url-handler.desktop
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# environment
+VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"f45d28db2b892ef5d3a7efebc519f640.zh-cn","_translationsConfigFile":"/home/kali/.config/Code/clp/f45d28db2b892ef5d3a7efebc519f640.zh-cn/tcf.json","_cacheRoot":"/home/kali/.config/Code/clp/f45d28db2b892ef5d3a7efebc519f640.zh-cn","_resolvedLanguagePackCoreLocation":"/home/kali/.config/Code/clp/f45d28db2b892ef5d3a7efebc519f640.zh-cn/97dec172d3256f8ca4bfb2143f3f76b503ca0534","_corruptedFile":"/home/kali/.config/Code/clp/f45d28db2b892ef5d3a7efebc519f640.zh-cn/corrupted.info","_languagePackSupport":true}
+# makefile (from 'Makefile', line 33)
+DIR_BINS := bins
+# default
+MAKE_HOST := x86_64-pc-linux-gnu
+# environment
+SDL_IM_MODULE = fcitx
+# makefile
+SHELL = /bin/sh
+# makefile (from 'Makefile', line 30)
+MNT := mnt
+# environment
+LESS_TERMCAP_us = [1;32m
+# default
+MAKECMDGOALS := all
+# environment
+XMODIFIERS = @im=fcitx
+# environment
+SHLVL = 0
+# makefile (from 'Makefile', line 39)
+BLFUNC_SRC := blfunc.asm
+# environment
+MAKELEVEL := 0
+# makefile (from 'Makefile', line 21)
+MKDIR := mkdir
+# default
+MAKE = $(MAKE_COMMAND)
+# environment
+PATH = /usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/home/kali/.dotnet/tools
+# environment
+LESS_TERMCAP_se = [0m
+# makefile (from 'Makefile', line 45)
+KERNEL_SRC := kmain.c screen.c kernel.c utility.c task.c interrupt.c ihandler.c global.c list.c queue.c memory.c mutex.c keyboard.c event.c sysinfo.c hdraw.c fs.c
+# default
+MAKEFILES := 
+ 
+# environment
+LANGUAGE = zh_CN:zh
+# automatic
+^F = $(notdir $^)
+# makefile (from 'Makefile', line 32)
+DIR_DEPS := deps
+# environment
+COMMAND_NOT_FOUND_INSTALL_PROMPT = 1
+# makefile (from 'Makefile', line 34)
+DIR_OBJS := objs
+# environment
+LESS_TERMCAP_mb = [1;31m
+# makefile (from 'Makefile', line 78)
+KENTRY_OUT := objs/kentry.o
+# makefile (from 'Makefile', line 18)
+UMOUNT := umount
+# makefile (from 'Makefile', line 82)
+KERNEL_BIN := bins/kernel.bin
+# automatic
+?F = $(notdir $?)
+# environment
+XDG_SEAT = seat0
+# makefile (from 'Makefile', line 29)
+HDIMG := hd.img
+# environment
+GTK_IM_MODULE = fcitx
+# environment
+XDG_CURRENT_DESKTOP = XFCE
+# makefile (from 'Makefile', line 85)
+KERNEL_OBJS := objs/kmain.o objs/screen.o objs/kernel.o objs/utility.o objs/task.o objs/interrupt.o objs/ihandler.o objs/global.o objs/list.o objs/queue.o objs/memory.o objs/mutex.o objs/keyboard.o objs/event.o objs/sysinfo.o objs/hdraw.o objs/fs.o
+# makefile (from 'Makefile', line 28)
+IMG := Aaron
+# environment
+LS_COLORS = :ow=30;44:
+# automatic
++F = $(notdir $+)
+# environment
+XDG_SEAT_PATH = /org/freedesktop/DisplayManager/Seat0
+# environment
+DESKTOP_SESSION = lightdm-xsession
+# makefile (from 'Makefile', line 38)
+COMMON_SRC := common.asm
+# environment
+ORIGINAL_XDG_CURRENT_DESKTOP = XFCE
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+CLUTTER_IM_MODULE = fcitx
+# environment
+LOGNAME = kali
+# makefile (from 'Makefile', line 77)
+APP_OUT := app
+# environment
+XDG_VTNR = 7
+# makefile (from 'Makefile', line 41)
+LOADER_SRC := loader.asm
+# makefile
+.DEFAULT_GOAL := all
+# makefile (from 'Makefile', line 19)
+RM := rm -rf
+# environment
+DISPLAY = :0.0
+# environment
+USER = kali
+# environment
+GTK_MODULES = gail:atk-bridge
+# makefile (from 'Makefile', line 1)
+NASM := nasm
+# default
+MAKE_VERSION := 4.3
+# makefile (from 'Makefile', line 8)
+LDFLAGS := -m elf_i386
+# makefile (from 'Makefile', line 75)
+LOADER_OUT := loader
+# environment
+SSH_AGENT_PID = 1463
+# makefile (from 'Makefile', line 74)
+BOOT_OUT := boot
+# environment
+_ = /usr/share/code/code
+# environment
+XDG_RUNTIME_DIR = /run/user/1000
+# makefile (from 'Makefile', line 5)
+CFLAGS := -m32 -fno-builtin -fno-stack-protector 
+# makefile (from 'Makefile', line 90)
+APP_BIN := bins/app.bin
+# makefile (from 'Makefile', line 79)
+AENTRY_OUT := objs/aentry.o
+# environment
+POWERSHELL_TELEMETRY_OPTOUT = 1
+# environment
+XDG_SESSION_CLASS = user
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+HOME = /home/kali
+# environment
+QT_IM_MODULE = fcitx
+# environment
+_JAVA_OPTIONS = -Dawt.useSystemAAFontSettings=on -Dswing.aatext=true
+# environment
+ELECTRON_RUN_AS_NODE = 1
+# environment
+VSCODE_IPC_HOOK = /run/user/1000/vscode-f2138f4e-1.74.3-main.sock
+# makefile (from 'Makefile', line 15)
+OBJCFLAGS := --set-start
+# makefile (from 'Makefile', line 63)
+APP_SRC := screen.c utility.c list.c queue.c memory.c syscall.c demo1.c demo2.c shell.c app.c
+# makefile (from 'Makefile', line 11)
+KERNEL_ADDR := 0xB000
+# environment
+XDG_SESSION_ID = 2
+# environment
+PANEL_GDK_CORE_DEVICE_EVENTS = 0
+# environment
+DOTNET_CLI_TELEMETRY_OPTOUT = 1
+# default
+.RECIPEPREFIX := 
+# automatic
+<F = $(notdir $<)
+# default
+SUFFIXES := 
+# makefile (from 'Makefile', line 7)
+LD := ld
+# environment
+QT_AUTO_SCREEN_SCALE_FACTOR = 0
+# makefile (from 'Makefile', line 93)
+APP_OBJS := objs/screen.o objs/utility.o objs/list.o objs/queue.o objs/memory.o objs/syscall.o objs/demo1.o objs/demo2.o objs/shell.o objs/app.o
+# environment
+XDG_GREETER_DATA_DIR = /var/lib/lightdm/data/kali
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
+# makefile (from 'Makefile', line 4)
+CC := gcc
+# makefile (from 'Makefile', line 14)
+OBJCOPY := objcopy
+# makefile (from 'Makefile', line 43)
+AENTRY_SRC := aentry.asm
+# environment
+XDG_MENU_PREFIX = xfce-
+# makefile (from 'Makefile', line 95)
+APP_DEPS := deps/screen.dep deps/utility.dep deps/list.dep deps/queue.dep deps/memory.dep deps/syscall.dep deps/demo1.dep deps/demo2.dep deps/shell.dep deps/app.dep
+# makefile (from 'Makefile', line 12)
+APP_ADDR := 0x12000
+# environment
+GDMSESSION = lightdm-xsession
+# variable set hash-table stats:
+# Load=148/1024=14%, Rehash=0, Collisions=18/429=4%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 2054, inode 1851291): 66 files, no impossibilities.
+
+# 66 files, no impossibilities in 1 directories.
+
+# Implicit Rules
+
+objs/%.o: %.c
+#  recipe to execute (from 'Makefile', line 154):
+	$(CC) $(CFLAGS) -o $@ -c $(filter %.c, $^)
+
+deps/%.dep: %.c
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# 2 implicit rules, 0 (0.0%) terminal.
+# Files
+
+# Not a target:
+objs/kmain.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+objs/syscall.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+demo1.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+objs/demo1.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+objs/app.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+app: bins/app.bin
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 145):
+	$(OBJCOPY) $(OBJCFLAGS) $(APP_ADDR) $< -O binary $@
+	sudo $(MOUNT) -o loop $(IMG) $(MNT)
+	sudo $(CP) $@ $(MNT)/$@
+	sudo $(UMOUNT) $(MNT)
+
+deps/screen.dep: screen.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'screen'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/screen.dep
+# automatic
+# * := screen
+# automatic
+# < := screen.c
+# automatic
+# + := screen.c
+# automatic
+# % := 
+# automatic
+# ^ := screen.c
+# automatic
+# ? := screen.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+objs/hdraw.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+deps/app.dep: app.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'app'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/app.dep
+# automatic
+# * := app
+# automatic
+# < := app.c
+# automatic
+# + := app.c
+# automatic
+# % := 
+# automatic
+# ^ := app.c
+# automatic
+# ? := app.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+ 
+deps/syscall.dep: syscall.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'syscall'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/syscall.dep
+# automatic
+# * := syscall
+# automatic
+# < := syscall.c
+# automatic
+# + := syscall.c
+# automatic
+# % := 
+# automatic
+# ^ := syscall.c
+# automatic
+# ? := syscall.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+deps/hdraw.dep: hdraw.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'hdraw'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/hdraw.dep
+# automatic
+# * := hdraw
+# automatic
+# < := hdraw.c
+# automatic
+# + := hdraw.c
+# automatic
+# % := 
+# automatic
+# ^ := hdraw.c
+# automatic
+# ? := hdraw.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+objs/utility.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+list.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.546044638
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+objs/memory.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+objs/aentry.o: aentry.asm common.asm
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 142):
+	$(NASM) $(NASMFLAGS) $< -o $@
+
+# Not a target:
+objs/keyboard.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+boot.asm:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+memory.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.546044638
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+hdraw.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+deps/queue.dep: queue.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'queue'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/queue.dep
+# automatic
+# * := queue
+# automatic
+# < := queue.c
+# automatic
+# + := queue.c
+# automatic
+# % := 
+# automatic
+# ^ := queue.c
+# automatic
+# ? := queue.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+syscall.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.546044638
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+Makefile:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.546044638
+#  File has been updated.
+#  Successfully updated.
+
+objs:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 157):
+	$(MKDIR) $(DIRS)
+
+Aaron: mnt
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/5=0%
+#  recipe to execute (from 'Makefile', line 116):
+	dd if=/dev/zero of=$@  bs=512 count=2880
+	$(MKFS) -F 12 -n "Aaron" $@ > /dev/null
+
+# Not a target:
+objs/ihandler.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+kmain.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+deps/keyboard.dep: keyboard.c
+ 
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'keyboard'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/keyboard.dep
+# automatic
+# * := keyboard
+# automatic
+# < := keyboard.c
+# automatic
+# + := keyboard.c
+# automatic
+# % := 
+# automatic
+# ^ := keyboard.c
+# automatic
+# ? := keyboard.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+deps/task.dep: task.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'task'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/task.dep
+# automatic
+# * := task
+# automatic
+# < := task.c
+# automatic
+# + := task.c
+# automatic
+# % := 
+# automatic
+# ^ := task.c
+# automatic
+# ? := task.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+objs/fs.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+objs/demo2.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+clean:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 178):
+	$(RM) $(DIRS) $(KERNEL_OUT) $(BOOT_OUT) $(LOADER_OUT) $(IMG) $(HDIMG) $(MNT) $(APP_OUT)
+
+# Not a target:
+ihandler.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+common.asm:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+objs/mutex.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+loader: common.asm blfunc.asm
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 124):
+	$(NASM) $< -o $@
+	sudo $(MOUNT) -o loop $(IMG) $(MNT)
+	sudo $(CP) $@ $(MNT)/$@
+	sudo $(UMOUNT) $(MNT)
+
+deps/global.dep: global.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'global'
+ 
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/global.dep
+# automatic
+# * := global
+# automatic
+# < := global.c
+# automatic
+# + := global.c
+# automatic
+# % := 
+# automatic
+# ^ := global.c
+# automatic
+# ? := global.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+demo2.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+objs/event.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+global.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+objs/global.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+deps/kernel.dep: kernel.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'kernel'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/kernel.dep
+# automatic
+# * := kernel
+# automatic
+# < := kernel.c
+# automatic
+# + := kernel.c
+# automatic
+# % := 
+# automatic
+# ^ := kernel.c
+# automatic
+# ? := kernel.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+event.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+deps/sysinfo.dep: sysinfo.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'sysinfo'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/sysinfo.dep
+# automatic
+# * := sysinfo
+ 
+# automatic
+# < := sysinfo.c
+# automatic
+# + := sysinfo.c
+# automatic
+# % := 
+# automatic
+# ^ := sysinfo.c
+# automatic
+# ? := sysinfo.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+hd.img:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 113):
+	$(BXIMAGE) $(BXIFALGE)  $@
+
+kernel: bins/kernel.bin
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 133):
+	$(OBJCOPY) $(OBJCFLAGS) $(KERNEL_ADDR) $< -O binary $@
+	sudo $(MOUNT) -o loop $(IMG) $(MNT)
+	sudo $(CP) $@ $(MNT)/$@
+	sudo $(UMOUNT) $(MNT)
+
+deps/mutex.dep: mutex.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'mutex'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/mutex.dep
+# automatic
+# * := mutex
+# automatic
+# < := mutex.c
+# automatic
+# + := mutex.c
+# automatic
+# % := 
+# automatic
+# ^ := mutex.c
+# automatic
+# ? := mutex.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+ 
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+objs/shell.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+blfunc.asm:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+objs/interrupt.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+boot: boot.asm blfunc.asm
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 120):
+	$(NASM) -g $< -o $@
+	dd if=$@ of=$(IMG) bs=512 count=1 conv=notrunc
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+all: Aaron hd.img objs bins boot loader kernel app
+#  Phony target (prerequisite of .PHONY).
+#  Command line target.
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/5=0%
+#  recipe to execute (from 'Makefile', line 100):
+	@echo "succeed! ==> Aaron.OS"
+
+# Not a target:
+queue.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.546044638
+#  File has been updated.
+#  Successfully updated.
+
+deps/demo2.dep: demo2.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'demo2'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/demo2.dep
+# automatic
+# * := demo2
+# automatic
+# < := demo2.c
+# automatic
+# + := demo2.c
+# automatic
+# % := 
+# automatic
+# ^ := demo2.c
+# automatic
+# ? := demo2.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+screen.c:
+ 
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.546044638
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+aentry.asm:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+utility.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.550044638
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+shell.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.546044638
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+objs/screen.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+objs/sysinfo.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+objs/list.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+deps/interrupt.dep: interrupt.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'interrupt'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/interrupt.dep
+# automatic
+# * := interrupt
+# automatic
+# < := interrupt.c
+# automatic
+# + := interrupt.c
+# automatic
+# % := 
+# automatic
+# ^ := interrupt.c
+# automatic
+# ? := interrupt.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+objs/queue.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+kernel.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+interrupt.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+keyboard.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+mnt:
+#  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := mnt
+# automatic
+# * := 
+# automatic
+# < := 
+# automatic
+# + := 
+# automatic
+# % := 
+# automatic
+# ^ := 
+# automatic
+# ? := 
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=1/13=8%
+#  recipe to execute (from 'Makefile', line 169):
+	$(MKDIR) $(MNT)
+	
+
+objs/kentry.o: common.asm
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 130):
+	$(NASM) $(NASMFLAGS) $< -o $@
+
+# Not a target:
+fs.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+deps/kmain.dep: kmain.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'kmain'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/kmain.dep
+# automatic
+# * := kmain
+# automatic
+# < := kmain.c
+# automatic
+# + := kmain.c
+# automatic
+# % := 
+# automatic
+# ^ := kmain.c
+# automatic
+# ? := kmain.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+rebuild:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 174):
+	$(MAKE) clean
+	$(MAKE) all
+
+# Not a target:
+sysinfo.c:
+#  Implicit rule search has been done.
+ 
+#  Last modified 2023-07-14 10:49:51.546044638
+#  File has been updated.
+#  Successfully updated.
+
+deps/ihandler.dep: ihandler.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'ihandler'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/ihandler.dep
+# automatic
+# * := ihandler
+# automatic
+# < := ihandler.c
+# automatic
+# + := ihandler.c
+# automatic
+# % := 
+# automatic
+# ^ := ihandler.c
+# automatic
+# ? := ihandler.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+deps/shell.dep: shell.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'shell'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/shell.dep
+# automatic
+# * := shell
+# automatic
+# < := shell.c
+# automatic
+# + := shell.c
+# automatic
+# % := 
+# automatic
+# ^ := shell.c
+# automatic
+# ? := shell.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+app.c:
+#  Implicit rule search has been done.
+#  Last modified 2023-07-14 10:49:51.542044637
+#  File has been updated.
+#  Successfully updated.
+
+bins/app.bin: objs/aentry.o objs/screen.o objs/utility.o objs/list.o objs/queue.o objs/memory.o objs/syscall.o objs/demo1.o objs/demo2.o objs/shell.o objs/app.o
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 151):
+	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld.script
+
+deps:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 157):
+	$(MKDIR) $(DIRS)
+ 
+
+ 
+bins/kernel.bin: objs/kentry.o objs/kmain.o objs/screen.o objs/kernel.o objs/utility.o objs/task.o objs/interrupt.o objs/ihandler.o objs/global.o objs/list.o objs/queue.o objs/memory.o objs/mutex.o objs/keyboard.o objs/event.o objs/sysinfo.o objs/hdraw.o objs/fs.o
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 139):
+	$(LD) $(LDFLAGS) -s $^ -o $@ -T ld.script
+
+deps/event.dep: event.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'event'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/event.dep
+# automatic
+# * := event
+# automatic
+# < := event.c
+# automatic
+# + := event.c
+# automatic
+# % := 
+# automatic
+# ^ := event.c
+# automatic
+# ? := event.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+# Not a target:
+mutex.c:
+#  Implicit rule search has been done.
+ 
+#  Last modified 2023-07-14 10:49:51.546044638
+#  File has been updated.
+#  Successfully updated.
+
+# Not a target:
+objs/task.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+.SUFFIXES:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+deps/memory.dep: memory.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'memory'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/memory.dep
+# automatic
+# * := memory
+# automatic
+# < := memory.c
+# automatic
+# + := memory.c
+# automatic
+# % := 
+# automatic
+# ^ := memory.c
+# automatic
+# ? := memory.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+deps/utility.dep: utility.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'utility'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/utility.dep
+# automatic
+# * := utility
+# automatic
+# < := utility.c
+# automatic
+# + := utility.c
+# automatic
+# % := 
+# automatic
+# ^ := utility.c
+# automatic
+# ? := utility.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+.PHONY: all clean rebuild
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+objs/kernel.o:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+task.c:
+#  Implicit rule search has been done.
+ 
+#  Last modified 2023-07-14 10:49:51.550044638
+#  File has been updated.
+#  Successfully updated.
+
+deps/list.dep: list.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'list'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/list.dep
+# automatic
+# * := list
+# automatic
+# < := list.c
+# automatic
+# + := list.c
+# automatic
+# % := 
+# automatic
+# ^ := list.c
+# automatic
+# ? := list.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+deps/fs.dep: fs.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'fs'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/fs.dep
+# automatic
+# * := fs
+# automatic
+# < := fs.c
+# automatic
+# + := fs.c
+# automatic
+# % := 
+# automatic
+# ^ := fs.c
+# automatic
+# ? := fs.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+deps/demo1.dep: demo1.c
+#  Implicit rule search has been done.
+#  Implicit/static pattern stem: 'demo1'
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+# automatic
+# @ := deps/demo1.dep
+# automatic
+# * := demo1
+# automatic
+# < := demo1.c
+# automatic
+# + := demo1.c
+# automatic
+# % := 
+# automatic
+# ^ := demo1.c
+# automatic
+# ? := demo1.c
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=2/18=11%
+#  recipe to execute (from 'Makefile', line 164):
+	@echo "Creatng $@ ..."
+	@set -e; \
+	$(CC) -MM -E $(filter %.c, $^) | sed 's,\(.*\)\.o[ :]*,$(DIR_OBJS)/\1.o @ : ,g'
+
+bins:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 157):
+	$(MKDIR) $(DIRS)
+
+# files hash-table stats:
+# Load=91/1024=9%, Rehash=0, Collisions=13/260=5%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 152 / storage = 1524 B / avg = 10 B
+# current buf: size = 8162 B / used = 1524 B / count = 152 / avg = 10 B
+
+# strcache performance: lookups = 288 / hit rate = 47%
+# hash-table stats:
+# Load=152/8192=2%, Rehash=0, Collisions=6/288=2%
+# Finished Make data base on Fri Jul 14 10:52:03 2023
+
+ 
