@@ -21,7 +21,11 @@ MKFS		:= mkfs.msdos
 MKDIR		:= mkdir
 CP			:= cp
 
+
+BXIMAGE	:= bximage
+BXIFALGE := -imgmode="flat" -mode=create -hd=20 -q
 img			:= Aaron
+hdimg	:= hd.img
 mnt			:= mnt
 
 dir_deps	:= deps
@@ -91,7 +95,7 @@ app_deps := $(addprefix $(dir_deps)/, $(app_deps))
 
 .PHONY: all
 
-all: $(img) $(dir_objs) $(dir_bins) $(boot_out) $(loader_out) $(kernel_out) $(app_out)
+all: $(img) $(hdimg) $(dir_objs) $(dir_bins) $(boot_out) $(loader_out) $(kernel_out) $(app_out)
 	@echo "succeed! ==> Aaron.OS"
 
 ifeq ("$(MAKECMDGOALS)", "all")
@@ -103,6 +107,9 @@ ifeq ("$(MAKECMDGOALS)", "")
 -include $(app_deps)
 -include $(kernel_deps)
 endif
+
+$(hdimg):
+	$(BXIMAGE) $(BXIFALGE)  $(hdimg)
 
 $(img): $(mnt)
 	dd if=/dev/zero of=$@  bs=512 count=2880
@@ -167,4 +174,4 @@ rebuild:
 	$(MAKE) all
 
 clean:
-	$(RM) $(dirs) $(kernel_out) $(boot_out) $(loader_out) $(img) $(mnt) $(app_out)
+	$(RM) $(dirs) $(kernel_out) $(boot_out) $(loader_out) $(img) $(hdimg) $(mnt) $(app_out)

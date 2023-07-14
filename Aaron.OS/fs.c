@@ -895,9 +895,193 @@ uint FWrite(uint fd, byte* buf, uint len)
     return ret;
 }
 
+static uint CopyFromCache(FileDesc* fd, byte* buf, uint len)
+{
+    uint ret = (fd->objIdx != SCT_END_FLAG);
+
+    if(ret)
+    {
+        uint n = SECT_SIZE - fd->offset;
+        byte* p = AddrOff(fd->cache, fd->offset);
+
+        n = (n < len) ? n : len;
+        MemCpy(buf, p, n);
+
+        fd->offset += n;
+
+        ret = n;
+    }
+
+    return ret;
+}
+
+static uint GetFileLen(FileDesc* fd)
+{
+    uint ret = 0;
+
+    if(fd->fe.sctBegin != SCT_END_FLAG)
+    {
+        ret = (fd->fe.sctNum - 1) * SECT_SIZE + fd->fe.lastBytes;
+    }
+
+    return ret;
+}
+
+static uint GetFilePos(FileDesc* fd)
+{
+    uint ret = 0;
+
+    if( fd->fe.sctBegin != SCT_END_FLAG )
+    {
+        ret = (fd->fe.sctNum - 1) * SECT_SIZE + fd->offset;
+    }
+
+    return ret;
+}
+
+static uint ToRead(FileDesc* fd, byte* buf, uint len)
+{
+    uint ret = -1;
+    uint n = GetFileLen(fd) - GetFilePos(fd);
+    uint i = 0;
+
+    len = (len < n) ? len : n;
+
+    while ((i<len) && ret)
+    {
+        byte* p = AddrOff(buf, i);
+
+        if(fd->offset == SECT_SIZE)
+        {
+            ret = PrepareCache(fd, fd->objIdx + 1);
+        }
+        if(ret)
+        {
+            n = CopyFromCache(fd, p, len - i);
+        }
+
+        i += n;
+    }
+
+    ret = i;
+    
+    return ret;
+}
+
+uint FRead(uint fd, byte* buf, uint len)
+{
+    uint ret = -1;
+
+    if( IsFDValid((FileDesc*)fd) && buf )
+    {
+        ret = ToRead((FileDesc*)fd, buf, len);
+    }
+
+    return ret;
+}
+
+static uint ToLocate(FileDesc* fd, uint pos)
+{
+    uint ret = -1;
+    uint len = GetFileLen(fd);
+
+    pos = (pos < len) ? pos : len;
+
+    uint objIdx = pos / SECT_SIZE;
+    uint offset = pos % SECT_SIZE;
+    uint sctIdx = FindIndex(fd->fe.sctBegin, objIdx);
+
+    ToFlush(fd);
+
+    if((sctIdx != SCT_END_FLAG) && HDRawRead(sctIdx, fd->offset))
+    {
+        fd->objIdx = objIdx;
+        fd->offset = offset;
+
+        ret = pos;
+    }
+
+    return ret;
+}
+
+uint FErase(uint fd, uint bytes)
+{
+    uint ret = 0;
+    FileDesc* pf = (FileDesc*)fd;
+
+    if( IsFDValid(pf) )
+    {
+        uint pos = GetFilePos(pf);
+        uint len = GetFileLen(pf);
+
+        ret = EraseLast((FSRoot*)(&pf->fe), bytes);
+
+        len -= ret;
+
+        if(ret && (pos > len))
+        {
+            ToLocate(pf, len);
+        }
+    }
+
+    return ret;
+}
+
 uint FDelete(const char* fn)
 {
     return fn && !IsOpened(fn) && DeleteInRoot(fn) ? FS_SUCCEED : FS_FAILED;
+}
+
+uint FSeek(uint fd, uint pos)
+{
+    uint ret = -1;
+    FileDesc* pf = (FileDesc*)fd;
+
+    if(IsFDValid(pf))
+    {
+        ret = ToLocate(pf, pos);
+    }
+
+    return ret;
+}
+
+uint FLength(uint fd)
+{
+    uint ret = -1;
+    FileDesc* pf = (FileDesc*)fd;
+
+    if( IsFDValid(pf) )
+    {
+        ret = GetFileLen(pf);
+    }
+
+    return ret;
+}
+
+uint FTell(uint fd)
+{
+    uint ret = -1;
+    FileDesc* pf = (FileDesc*)fd;
+
+    if( IsFDValid(pf) )
+    {
+        ret = GetFilePos(pf);
+    }
+
+    return ret;
+}
+
+uint FFlush(uint fd)
+{
+    uint ret = -1;
+    FileDesc* pf = (FileDesc*)fd;
+
+    if( IsFDValid(pf) )
+    {
+        ret = ToFlush(pf);
+    }
+
+    return ret;
 }
 
 uint FSIsFormatted()

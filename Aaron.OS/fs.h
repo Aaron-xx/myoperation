@@ -22,6 +22,12 @@ uint FRename(const char* ofn, const char* nfn);
 
 uint FOpen(const char* fn);
 uint FWrite(uint fd, byte* buf, uint len);
+uint FRead(uint fd, byte* buf, uint len);
 void FClose(uint fd);
+uint FErase(uint fd, uint bytes);
+uint FSeek(uint fd, uint pos);
+uint FLength(uint fd);
+uint FTell(uint fd);
+uint FFlush(uint fd);
 
 #endif
