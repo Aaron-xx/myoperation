@@ -11,7 +11,7 @@
 #define AppStackSize    512
 
 #define BaseOfKernel    0xB000
-#define BaseOfApp       0x12000
+#define BaseOfApp       0x16000
 
 #define BaseOfSharedMemory 0xA000
 #define AppMainEntry       (BaseOfSharedMemory + 36)

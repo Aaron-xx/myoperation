@@ -1129,19 +1129,77 @@ uint FRename(const char* ofn, const char* nfn)
     return ret;
 }
 
-void test(const char* fn)
+static char* GetFileNameInSector(FileEntry* feBase, char* files, uint cnt)
 {
-    FileEntry* fe = FindInRoot(fn);
+    char* ret = NULL;
+    uint i = 0;
 
-    if( fe )
+    for ( i = 0; i < cnt; i++)
     {
-        byte buf[SECT_SIZE] = {0};
+        FileEntry* fe = AddrOff(feBase, i);
 
-        HDRawRead(fe->sctBegin, buf);
+        if (fe && fe->name && files)
+        {
+            ret = StrCat(files, fe->name);
 
-        PrintString("content =");
-        PrintString(buf);
-
-        PrintChar('\n');
+            if(ret)
+                ret = StrCat(files, "  " );
+            else
+                break;
+        }
+        else
+        {
+            Free(ret);
+            ret = NULL;
+        }
     }
+    
+    return ret;
+}
+
+char*  FileInDir(char* files)
+{
+    char* ret = NULL;
+    FSRoot* root = (FSRoot*)ReadSector(ROOT_SCT_IDX);
+    uint next = root->sctBegin;
+    int i = 0;
+
+    for(i = 0; i < (root->sctNum - 1); i++)
+    {
+        FileEntry* feBase = (FileEntry*)ReadSector(next);
+
+        if(feBase)
+        {
+            ret = GetFileNameInSector(feBase, files, FE_ITEM_CNT);
+        }
+        Free(feBase);
+
+        if(!ret)
+        {
+            next = NextSector(next);
+        }
+        else
+        {
+            break;
+        }
+
+    }
+
+    if(!ret)
+    {
+        uint cnt = root->lastBytes / FE_BYTES;
+        FileEntry* feBase = (FileEntry*)ReadSector(next);
+
+        if(feBase)
+        {
+            ret = GetFileNameInSector(feBase, files, cnt);
+        }
+
+        Free(feBase);
+    }
+
+    PrintIntDec(StrLen(files));
+    PrintChar('\n');
+
+    return ret;
 }

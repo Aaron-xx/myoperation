@@ -32,5 +32,6 @@ byte* MemSet(byte* dst, uint n, byte val);
 char* StrCpy(char* dst, const char* src, uint n);
 int StrLen(const char* s);
 int StrCmp(const char* left, const char* right, uint n);
+int StrCat(char* left, const char* right);
 
 #endif

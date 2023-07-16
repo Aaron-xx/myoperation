@@ -12,7 +12,7 @@ _start:
 AppModInit:
     push ebp
     mov ebp, esp
-    
+
     mov dword [AppMainEntry], AppMain + BaseOfApp
 
     push HeapSize

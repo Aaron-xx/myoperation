@@ -173,5 +173,8 @@ rebuild:
 	$(MAKE) clean
 	$(MAKE) all
 
+hd_clean:
+	$(RM) $(HDIMG)
+
 clean:
-	$(RM) $(DIRS) $(KERNEL_OUT) $(BOOT_OUT) $(LOADER_OUT) $(IMG) $(HDIMG) $(MNT) $(APP_OUT)
+	$(RM) $(DIRS) $(KERNEL_OUT) $(BOOT_OUT) $(LOADER_OUT) $(IMG) $(MNT) $(APP_OUT)

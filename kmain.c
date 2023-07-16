@@ -43,78 +43,11 @@ void KMain()
 
     FSModInit();
 
-    if(FSFormat() && FSIsFormatted() )
-    {
-        const char* fn = "test.txt";
-        char str[] = "Aaron.OS";
-        char buf[512] = {0};
+    char buf[32] = {0};
 
-        if( FExisted(fn) == FS_EXISTED )
-        {
-            FDelete(fn);
-        }
+    FileInDir(buf);
 
-        PrintString("create =  ");
-        PrintIntDec(FCreate(fn));
-
-        PrintChar('\n');
-
-        uint fd = FOpen(fn);
-
-        PrintString("fd = ");
-        PrintIntDec(fd);
-        PrintChar('\n');
-
-        PrintString("write bytes =  ");
-        PrintIntDec(FWrite(fd, str, sizeof(str)));
-        PrintChar('\n');
-
-        FClose(fd);
-
-        fd = FOpen(fn);
-
-        PrintString("fd =  ");
-        PrintIntDec(fd);
-        PrintChar('\n');
-
-        PrintString("pos =  ");
-        PrintIntDec(FTell(fd));
-        PrintChar('\n');
-
-        PrintString("seek =  ");
-        PrintIntDec(FSeek(fd, 200));
-        PrintChar('\n');
-
-        PrintString("pos =  ");
-        PrintIntDec(FTell(fd));
-        PrintChar('\n');
-
-        // PrintString("erase =  ");
-        // PrintIntDec(FErase(fd, 400));
-        // PrintChar('\n');
-
-        // PrintString("len =  ");
-        // PrintIntDec(FLength(fd));
-        // PrintChar('\n');
-
-        // PrintString("pos =  ");
-        // PrintIntDec(FTell(fd));
-        // PrintChar('\n');
-
-        PrintString("seek =  ");
-        PrintIntDec(FSeek(fd, 0));
-        PrintChar('\n');
-
-        PrintString("read bytes =  ");
-        PrintIntDec(FRead(fd, buf, sizeof(buf)));
-        PrintChar('\n');
-
-        PrintString("content =  ");
-        PrintString(buf);
-        PrintChar('\n');
-
-        FClose(fd);
-    }
+    PrintString(buf);
 
     // AppModInit();
 
@@ -124,7 +57,7 @@ void KMain()
 
     ConfigPageTable();
 
-    while(1);
+    while (1);
 
     LaunchTask();
 }

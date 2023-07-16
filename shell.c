@@ -75,6 +75,26 @@ static void Clear()
     PrintString(PROMPT);
 }
 
+static void DisplayFile()
+{
+    int h = 0;
+    int w = 0;
+
+    SetPrintPos(TASK_START_W, TASK_START_H);
+    
+    for(h=TASK_START_H; h<SCREEN_HEIGHT; h++)
+    {
+        for(w=TASK_START_W; w<SCREEN_WIDTH; w++)
+        {
+            PrintChar(' ');
+        }
+    }
+
+
+    SetPrintPos(CMD_START_W, CMD_START_H);
+    PrintString(PROMPT);
+}
+
 static void AddCmdEntry(const char* cmd, void(*run)())
 {
     CmdRun* cr = (CmdRun*)Malloc(sizeof(CmdRun));
@@ -227,6 +247,7 @@ void Shell()
 
     AddCmdEntry("mem", Mem);
     AddCmdEntry("clear", Clear);
+    // AddCmdEntry("ls", DisplayFile);
     AddCmdEntry("demo1", Demo1);
     AddCmdEntry("demo2", Demo2);
     

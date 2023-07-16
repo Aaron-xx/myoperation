@@ -10,7 +10,7 @@ PageTblBase    equ    PageDirBase + 0x1000
 BaseOfBoot    equ    0x7C00
 BaseOfLoader  equ    0x9000
 BaseOfKernel  equ    0xB000
-BaseOfApp     equ    0x12000
+BaseOfApp     equ    0x16000
 
 BaseOfSharedMemory   equ    0xA000
 

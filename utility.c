@@ -130,3 +130,21 @@ int StrCmp(const char* left, const char* right, uint n)
 
     return ret;
 }
+
+int StrCat(char* left, const char* right)
+{
+    int ret = 0;
+
+    if (left && right)
+    {
+        while(*left)
+            left++;
+
+        while (*right)
+            *left++ = *right++;
+
+        ret = 1;
+    }
+
+    return ret;
+}
