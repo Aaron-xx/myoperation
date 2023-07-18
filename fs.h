@@ -30,6 +30,6 @@ uint FLength(uint fd);
 uint FTell(uint fd);
 uint FFlush(uint fd);
 
-char*  FileInDir(char* files);
+uint  FileInDir(char* files);
 
 #endif

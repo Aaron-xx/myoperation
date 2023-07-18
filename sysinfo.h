@@ -4,5 +4,6 @@
 #include "type.h"
 
 void SysInfoCallHandler(uint cmd, uint param1, uint param2);
+void CmdCallHandler(uint cmd, uint param1, uint param2);
 
 #endif

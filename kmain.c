@@ -43,21 +43,17 @@ void KMain()
 
     FSModInit();
 
-    char buf[32] = {0};
+    FCreate("1.txt");
+    FCreate("2.txt");
+    FCreate("3.txt");
 
-    FileInDir(buf);
-
-    PrintString(buf);
-
-    // AppModInit();
+    AppModInit();
 
     TaskModInit();
 
     IntModInit();
 
     ConfigPageTable();
-
-    while (1);
 
     LaunchTask();
 }

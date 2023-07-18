@@ -75,10 +75,12 @@ static void Clear()
     PrintString(PROMPT);
 }
 
-static void DisplayFile()
+static void LS()
 {
     int h = 0;
     int w = 0;
+    uint status = 0;
+    char buf[128] = {0};
 
     SetPrintPos(TASK_START_W, TASK_START_H);
     
@@ -90,9 +92,15 @@ static void DisplayFile()
         }
     }
 
+    status = DisplayFile(buf);
 
-    SetPrintPos(CMD_START_W, CMD_START_H);
-    PrintString(PROMPT);
+    if(status)
+    {
+        Clear();
+        SetPrintPos(CMD_START_W, CMD_START_H + 1);
+        PrintChar('\n');
+        PrintString(buf);
+    }
 }
 
 static void AddCmdEntry(const char* cmd, void(*run)())
@@ -247,7 +255,7 @@ void Shell()
 
     AddCmdEntry("mem", Mem);
     AddCmdEntry("clear", Clear);
-    // AddCmdEntry("ls", DisplayFile);
+    AddCmdEntry("ls", LS);
     AddCmdEntry("demo1", Demo1);
     AddCmdEntry("demo2", Demo2);
     

@@ -487,7 +487,6 @@ static FileEntry* FindInRoot(const char* name)
     Free(root);
 
     return ret;
-
 }
 
 uint FCreate(const char* fn)
@@ -506,7 +505,7 @@ uint FExisted(const char* fn)
 {
     uint ret = FS_FAILED;
 
-    if( fn )
+    if(fn)
     {
         FileEntry* fe = FindInRoot(fn);
 
@@ -1129,9 +1128,9 @@ uint FRename(const char* ofn, const char* nfn)
     return ret;
 }
 
-static char* GetFileNameInSector(FileEntry* feBase, char* files, uint cnt)
+static uint GetFileNameInSector(FileEntry* feBase, char* files, uint cnt)
 {
-    char* ret = NULL;
+    uint ret = 0;
     uint i = 0;
 
     for ( i = 0; i < cnt; i++)
@@ -1147,19 +1146,14 @@ static char* GetFileNameInSector(FileEntry* feBase, char* files, uint cnt)
             else
                 break;
         }
-        else
-        {
-            Free(ret);
-            ret = NULL;
-        }
     }
     
     return ret;
 }
 
-char*  FileInDir(char* files)
+uint  FileInDir(char* files)
 {
-    char* ret = NULL;
+    uint ret = 0;
     FSRoot* root = (FSRoot*)ReadSector(ROOT_SCT_IDX);
     uint next = root->sctBegin;
     int i = 0;
@@ -1182,7 +1176,6 @@ char*  FileInDir(char* files)
         {
             break;
         }
-
     }
 
     if(!ret)
@@ -1198,8 +1191,6 @@ char*  FileInDir(char* files)
         Free(feBase);
     }
 
-    PrintIntDec(StrLen(files));
-    PrintChar('\n');
-
+    PrintIntDec(ret);
     return ret;
 }

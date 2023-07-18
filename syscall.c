@@ -92,11 +92,11 @@ uint GetMemSize()
     return ret;
 }
 
-// void DisplayFile()
-// {
-//     uint ret = 0;
+uint DisplayFile(char* files)
+{
+    uint ret = 0;
 
-//     SysCall(2, 1, &ret, 0);
+    SysCall(4, 0, &ret, files);
 
-//     return ret;
-// }
+    return ret;
+}
