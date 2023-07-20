@@ -411,11 +411,11 @@ static FileEntry* FindInSector(const char* name, FileEntry* feBase, uint cnt)
     FileEntry* ret = NULL;
     uint i = 0;
 
-    for ( i = 0; i < cnt; i++)
+    for (i = 0; i < cnt; i++)
     {
        FileEntry* fe = AddrOff(feBase, i);
 
-       if( StrCmp(fe->name, name, -1))
+       if(StrCmp(fe->name, name, -1))
        {
             ret = (FileEntry*)Malloc(FE_BYTES);
 
@@ -423,11 +423,11 @@ static FileEntry* FindInSector(const char* name, FileEntry* feBase, uint cnt)
             {
                 *ret = *fe;
             }
-            
+
             break;
        }
     }
-    
+
     return ret;
 }
 
@@ -479,7 +479,7 @@ static FileEntry* FindInRoot(const char* name)
     FileEntry* ret = NULL;
     FSRoot* root = (FSRoot*)ReadSector(ROOT_SCT_IDX);
 
-    if(root && root->sctNum)
+    if(root && (root->sctNum || root->lastBytes))
     {
         ret = FindFileEntry(name, root->sctBegin, root->sctNum, root->lastBytes);
     }
@@ -493,7 +493,7 @@ uint FCreate(const char* fn)
 {
     uint ret = FExisted(fn);
 
-    if( ret == FS_NONEXISTED )
+    if(ret == FS_NONEXISTED)
     {
         ret = CreateInRoot(fn) ? FS_SUCCEED : FS_FAILED;
     }

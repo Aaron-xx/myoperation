@@ -173,6 +173,10 @@ rebuild:
 	$(MAKE) clean
 	$(MAKE) all
 
+clean_all:
+	$(MAKE) clean
+	$(MAKE) hd_clean
+
 hd_clean:
 	$(RM) $(HDIMG)
 
