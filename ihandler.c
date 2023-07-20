@@ -47,6 +47,7 @@ void SysCallHandler(uint type, uint cmd, uint param1, uint param2)
             break;
         case 3:
             SysInfoCallHandler(cmd, param1, param2);
+            break;
         case 4 :
             CmdCallHandler(cmd, param1, param2);
             break;

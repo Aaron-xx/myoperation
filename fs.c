@@ -1191,6 +1191,5 @@ uint  FileInDir(char* files)
         Free(feBase);
     }
 
-    PrintIntDec(ret);
     return ret;
 }

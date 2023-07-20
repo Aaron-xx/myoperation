@@ -98,7 +98,6 @@ static void LS()
     {
         Clear();
         SetPrintPos(CMD_START_W, CMD_START_H + 1);
-        PrintChar('\n');
         PrintString(buf);
     }
 }
