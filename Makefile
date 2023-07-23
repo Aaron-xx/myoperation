@@ -9,7 +9,7 @@ LDFLAGS		:= -m elf_i386
 
 
 KERNEL_ADDR := 0xB000
-APP_ADDR    := 0x12000
+APP_ADDR    := 0x16000
 
 OBJCOPY		:=  objcopy
 OBJCFLAGS	:= --set-start
@@ -170,7 +170,7 @@ $(MNT):
 .PHONY: clean rebuild
 
 rebuild:
-	$(MAKE) clean
+	$(MAKE) clean_all
 	$(MAKE) all
 
 clean_all:

@@ -1,7 +1,6 @@
 #include "hdraw.h"
 #include "fs.h"
 #include "utility.h"
-#include "screen.h"
 #include "list.h"
 
 #ifdef DTFSER
@@ -437,26 +436,27 @@ static FileEntry* FindFileEntry(const char* name, uint sctBegin, uint sctNum, ui
     uint next = sctBegin;
     uint i = 0;
 
-    for(i=0; i<(sctNum-1); i++)
-    {
-        FileEntry* feBase = (FileEntry*)ReadSector(next);
-
-        if(feBase)
+    if(sctNum != 0)
+        for(i=0; i<(sctNum-1); i++)
         {
-            ret = FindInSector(name, feBase, FE_ITEM_CNT);
-        }
+            FileEntry* feBase = (FileEntry*)ReadSector(next);
 
-        Free(feBase);
+            if(feBase)
+            {
+                ret = FindInSector(name, feBase, FE_ITEM_CNT);
+            }
 
-        if(!ret)
-        {
-            next = NextSector(next);
+            Free(feBase);
+
+            if(!ret)
+            {
+                next = NextSector(next);
+            }
+            else
+            {
+                break;
+            }
         }
-        else
-        {
-            break;
-        }
-    }
 
     if(!ret)
     {

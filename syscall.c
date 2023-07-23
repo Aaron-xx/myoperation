@@ -1,5 +1,4 @@
 #include "syscall.h"
-#include "screen.h"
 #include "app.h"
 
 #define SysCall(type, cmd, param1, param2)    asm volatile(                                  \

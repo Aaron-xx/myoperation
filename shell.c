@@ -3,12 +3,13 @@
 #include "screen.h"
 #include "list.h"
 #include "memory.h"
+#include "syscall.h"
 
 #include "demo1.h"
 #include "demo2.h"
 
 #define BUFF_SIZE     64
-#define PROMPT        "D.T.OS >> "
+#define PROMPT        "AARON.OS >> "
 #define KEY_ENTER     0x0D
 #define KEY_BACKSPACE 0x08
 

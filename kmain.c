@@ -43,10 +43,6 @@ void KMain()
 
     FSModInit();
 
-    FCreate("1.txt");
-    FCreate("2.txt");
-    FCreate("3.txt");
-
     AppModInit();
 
     TaskModInit();

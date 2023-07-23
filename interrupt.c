@@ -1,7 +1,6 @@
 #include "utility.h"
 #include "interrupt.h"
 #include "ihandler.h"
-#include "screen.h"
 #include "global.h"
 
 void IntModInit()

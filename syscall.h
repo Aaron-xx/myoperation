@@ -20,5 +20,6 @@ uint DestroyMutex(uint mutex);
 
 uint ReadKey();
 uint GetMemSize();
+uint DisplayFile(char* files);
 
 #endif

@@ -1,6 +1,5 @@
 #include "utility.h"
 #include "task.h"
-#include "screen.h"
 #include "queue.h"
 #include "memory.h"
 #include "mutex.h"
